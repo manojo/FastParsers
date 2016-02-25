@@ -1,5 +1,5 @@
 object CSVBoolHandWritten {
-	
+
 	def apply(input: Array[Char]): List[Boolean] = {
 		var pos = 0
 		val inputsize = input.length
@@ -7,7 +7,7 @@ object CSVBoolHandWritten {
 		var result1 = false
 		var result2 = false
 		var result3 = false
-		
+
 		var success = false
 		if (pos < inputsize && input(pos) == '['){
 			pos += 1;
@@ -18,30 +18,30 @@ object CSVBoolHandWritten {
 					pos += 1
 					success = true
 				}
-				else 
+				else
 					success = false
 				if (success) {
 					if (input(pos) == 'r'){
 						pos += 1
 						success = true
 					}
-					else 
+					else
 						success = false
-						
+
 					if (success) {
 						if (input(pos) == 'u'){
 							pos += 1
 							success = true
 						}
-						else 
+						else
 							success = false
-							
+
 						if (success) {
 							if (input(pos) == 'e'){
 								pos += 1
 								success = true
 							}
-							else 
+							else
 								success = false
 							if (success)
 								result1 = true
@@ -54,37 +54,37 @@ object CSVBoolHandWritten {
 						pos += 1
 						success = true
 					}
-					else 
+					else
 						success = false
 					if (success) {
 						if (input(pos) == 'a'){
 							pos += 1
 							success = true
 						}
-						else 
+						else
 							success = false
-							
+
 						if (success) {
 							if (input(pos) == 'l'){
 								pos += 1
 								success = true
 							}
-							else 
+							else
 								success = false
-								
+
 							if (success) {
 								if (input(pos) == 's'){
 									pos += 1
 									success = true
 								}
-								else 
+								else
 									success = false
 								if (success) {
 									if (input(pos) == 'e'){
 										pos += 1
 										success = true
 									}
-									else 
+									else
 										success = false
 									if (success)
 										result2 = false
@@ -94,7 +94,7 @@ object CSVBoolHandWritten {
 					}
 					result3 = result2
 				}
-				else 
+				else
 					result3 = result1
 				if (success){
 					values += (result3)
@@ -109,7 +109,6 @@ object CSVBoolHandWritten {
 			else
 				Nil
 		}
-		else
-			Nil
+		else Nil
 	}
 }

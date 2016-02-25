@@ -28,8 +28,8 @@ object StringLitParseHandWritten {
 
     if (isNEOI && currentInput == '\"') advance else return (None, offset)
 
-    while(isNEOI && currentInput != '\"') {
-      if(currentInput == '\\') advance
+    while (isNEOI && currentInput != '\"') {
+      if (currentInput == '\\') advance
       advance
     }
 
@@ -106,8 +106,8 @@ object StringLitParseHandWritten {
 
     if (isNEOI && currentInput == '\"') advance else return Nil
 
-    while(isNEOI && currentInput != '\"') {
-      if(currentInput == '\\') advance
+    while (isNEOI && currentInput != '\"') {
+      if (currentInput == '\\') advance
       advance
     }
 
@@ -128,8 +128,8 @@ object StringLitParseHandWritten {
 
       if (isNEOI && currentInput == '\"') advance else return Nil
 
-      while(isNEOI && currentInput != '\"') {
-        if(currentInput == '\\') advance
+      while (isNEOI && currentInput != '\"') {
+        if (currentInput == '\\') advance
         advance
       }
 
@@ -170,8 +170,8 @@ object StringLitParseHandWritten {
 
     if (isNEOI && currentInput == '\"') advance else return Nil
 
-    while(isNEOI && currentInput != '\"') {
-      if(currentInput == '\\') advance
+    while (isNEOI && currentInput != '\"') {
+      if (currentInput == '\\') advance
       advance
     }
 
@@ -192,8 +192,8 @@ object StringLitParseHandWritten {
 
       if (isNEOI && currentInput == '\"') advance else return Nil
 
-      while(isNEOI && currentInput != '\"') {
-        if(currentInput == '\\') advance
+      while (isNEOI && currentInput != '\"') {
+        if (currentInput == '\\') advance
         advance
       }
 
@@ -234,8 +234,8 @@ object StringLitParseHandWritten {
 
     if (isNEOI && currentInput == '\"') advance else return JSArray(Nil)
 
-    while(isNEOI && currentInput != '\"') {
-      if(currentInput == '\\') advance
+    while (isNEOI && currentInput != '\"') {
+      if (currentInput == '\\') advance
       advance
     }
 
@@ -254,8 +254,8 @@ object StringLitParseHandWritten {
 
       if (isNEOI && currentInput == '\"') advance else return JSArray(Nil)
 
-      while(isNEOI && currentInput != '\"') {
-        if(currentInput == '\\') advance
+      while (isNEOI && currentInput != '\"') {
+        if (currentInput == '\\') advance
         advance
       }
 
@@ -281,13 +281,14 @@ object StringLitParseHandWritten {
   def parseCSVStringLits5(input: Array[Char], offset: Int): JSValue = {
 
     val parseBackSlash = (i: Int) => {
-      if(i < input.length && input(i) == '\\' && (i + 1) < input.length) Some(i+2)
+      if (i < input.length && input(i) == '\\' && (i + 1) < input.length) Some(i + 2)
       else None
     }
 
     val backSlashOrAnything = (i: Int) => {
       parseBackSlash(i) match {
-        case None => if(i < input.length && input(i) != '\"') Some(i+1) else None
+        case None =>
+          if (i < input.length && input(i) != '\"') Some(i + 1) else None
         case other => other
       }
     }
@@ -313,7 +314,7 @@ object StringLitParseHandWritten {
 
       if (isNEOI && currentInput == '\"') advance else return JSArray(Nil)
 
-      while(isNEOI && currentInput != '\"') {
+      while (isNEOI && currentInput != '\"') {
         backSlashOrAnything(tmpOffset) match {
           case Some(next) => tmpOffset = next
           case None => ()
@@ -335,7 +336,7 @@ object StringLitParseHandWritten {
 
         if (isNEOI && currentInput == '\"') advance else return JSArray(Nil)
 
-        while(isNEOI && currentInput != '\"') {
+        while (isNEOI && currentInput != '\"') {
           backSlashOrAnything(tmpOffset) match {
             case Some(next) => tmpOffset = next
             case None => ()
@@ -365,7 +366,7 @@ object StringLitParseHandWritten {
     innerFun2(offset)
   }
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     println("check it out man!")
     println(parseStringLit1("\"go deh natty dread\"".toCharArray, 0))
 
