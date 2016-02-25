@@ -24,10 +24,10 @@ trait RulesInliner extends RulesTransformer {
   import c.universe._
 
   override def transformRuleCalls(tree: c.Tree,
-                                   enclosingRule: RuleInfo,
-                                   rulesMap: HashMap[String, RuleInfo],
-                                   expandedRules: HashMap[String, RuleInfo],
-                                   rulesPath: List[String]): c.Tree = {
+                                  enclosingRule: RuleInfo,
+                                  rulesMap: HashMap[String, RuleInfo],
+                                  expandedRules: HashMap[String, RuleInfo],
+                                  rulesPath: List[String]): c.Tree = {
 
     def inlineExpand(ruleName: TermName, typeArgs: List[c.Type], args: List[c.Tree]): Option[c.Tree] =
       if (!rulesPath.contains(ruleName.toString)) {
@@ -45,7 +45,7 @@ trait RulesInliner extends RulesTransformer {
     def callParent = super.transformRuleCalls(tree, enclosingRule, rulesMap, expandedRules, rulesPath)
 
     tree match {
-      //TODO correct bug with inlining when rule like that parens('a' ~ 'b') 
+      //TODO correct bug with inlining when rule like that parens('a' ~ 'b')
       /*case q"${ruleName: TermName}[..$t](..$args)" =>
         inlineExpand(ruleName, t.map(_.tpe), args) getOrElse callParent*/
       case q"${ruleName: TermName}(..$args)" =>

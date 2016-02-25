@@ -31,7 +31,7 @@ object Test {
 
     def rule1(p: Parser[List[Char]], y: Int): Parser[Any] = 'a' ~ p ~ rule2(y)
     def rule2(x: Int): Parser[Any]  = rule1(repN('c', x), x + 1) | 'b'*/
-    def parens[T](p: Parser[T]) = 'x' ~ p ~ 'x' 
+    def parens[T](p: Parser[T]) = 'x' ~ p ~ 'x'
     def test = parens('a' ~ 'y')
 
     /*def parens(p: Parser[(Char, Char)]) = 'x' ~ p ~ 'x'

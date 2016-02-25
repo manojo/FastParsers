@@ -17,15 +17,15 @@ trait ParseRules extends MapRules {
   //import c.internal.decorators._
 
   override def process(rules: HashMap[String, RuleInfo]) = {
-   val rulesMap = super.process(rules)
+    val rulesMap = super.process(rules)
 
-   val map = new HashMap[String, RuleInfo]()
-   for (k <- rulesMap.keys) {
-     val rule = rulesMap(k)
-     map += ((k, rule.copy(code = createRuleDef(k, rule))))
-   }
-   map
- }
+    val map = new HashMap[String, RuleInfo]()
+    for (k <- rulesMap.keys) {
+      val rule = rulesMap(k)
+      map += ((k, rule.copy(code = createRuleDef(k, rule))))
+    }
+    map
+  }
 
   def convertParsersParams(params: List[c.Tree]) = params.map{
     case valdef @ ValDef(m,n,t,v)  => getInnerTypeOf[Parser[_]](t.tpe) match {
@@ -45,22 +45,21 @@ trait ParseRules extends MapRules {
   }.transform(c.typecheck(callToString(tree)))
 
   private def createRuleDef(name: String, rule: RuleInfo): c.Tree = {
-   val ruleName = TermName(name)
-   val startPosition = TermName(c.freshName)
-   val rs = new ResultsStruct(new ListBuffer[Result]())
-   val ruleCode = expand(rule.code, rs)
-   val initResults = rs.results.map(x => q"var ${x._1}:${x._2} = ${zeroValue(x._2)}")
-   val tupledResults = rs.combine
+    val ruleName = TermName(name)
+    val startPosition = TermName(c.freshName)
+    val rs = new ResultsStruct(new ListBuffer[Result]())
+    val ruleCode = expand(rule.code, rs)
+    val initResults = rs.results.map(x => q"var ${x._1}:${x._2} = ${zeroValue(x._2)}")
+    val tupledResults = rs.combine
 
 
-   val result = q"""fastparsers.framework.parseresult.ParseResult($success,error,if ($success) $tupledResults else ${zeroValue(tq"${rule.typ}")},$pos)"""
+    val result = q"""fastparsers.framework.parseresult.ParseResult($success,error,if ($success) $tupledResults else ${zeroValue(tq"${rule.typ}")},$pos)"""
 
-   val wrapCode =
-     q"""
-     var $success = false
-       ..$initResults
-       $ruleCode
-       $result
+    val wrapCode = q"""
+      var $success = false
+      ..$initResults
+      $ruleCode
+      $result
     """
 
    val code = initError(initInput(q"$startPosition", wrapCode))
@@ -70,9 +69,9 @@ trait ParseRules extends MapRules {
    val replacedTree = removeCompileTimeAnnotation(rule.code)// @saveAST(${replacedTree})
 
    val allParams = q"$inputValue: $inputType" :: (rewriteParams :+ q"val $startPosition: Int = 0")
-   
-   val rulecode = q"""def $ruleName[..${rule.typeParams}](..$allParams): 
-                     fastparsers.framework.parseresult.ParseResult[${rule.typ}, $errorType]   @fastparsers.framework.saveAST(${replacedTree}) = 
+
+   val rulecode = q"""def $ruleName[..${rule.typeParams}](..$allParams):
+                     fastparsers.framework.parseresult.ParseResult[${rule.typ}, $errorType]   @fastparsers.framework.saveAST(${replacedTree}) =
                      ${c.untypecheck(code)}"""
     rulecode
  }

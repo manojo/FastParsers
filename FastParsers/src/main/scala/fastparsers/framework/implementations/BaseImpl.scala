@@ -40,7 +40,6 @@ trait BaseImpl extends TreeTools {
       case v => c.abort(c.enclosingPosition, "incorrect parser type " + show(v))
     }
 
-
     val rulesMap = new HashMap[String, RuleInfo]()
     c.typecheck(rules) match {
       case q"{..$body}" =>
