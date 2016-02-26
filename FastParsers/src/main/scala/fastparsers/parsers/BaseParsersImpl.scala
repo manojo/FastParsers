@@ -82,8 +82,8 @@ trait BaseParsersImpl extends ParserImplBase { self: ParseInput with ParseError 
     case q"$a <~[$d] $b"                    => "(" + prettyPrint(a) + " <~ " + prettyPrint(b) + ")"
     case q"$a ||[$d] $b"                    => prettyPrint(a) + " | " + prettyPrint(b)
     case q"$a |[$d] $b"                     => prettyPrint(a) + " | " + prettyPrint(b)
-    case q"$a ^^[$d] $f"                    => prettyPrint(a) + " ^^(" + prettyPrint(f) + ")"
-    case q"$a map[$d] $f"                   => prettyPrint(a) + " map (" + prettyPrint(f) + ")"
+    case q"$a ^^[$d] $f"                    => prettyPrint(a) + " ^^(" + showCode(f) + ")"
+    case q"$a map[$d] $f"                   => prettyPrint(a) + " map (" + showCode(f) + ")"
     case q"$a ^^^[$d] $v"                   => prettyPrint(a) + " ^^^ (" + prettyPrint(v) + ")"
     case q"$a filter[$d] $f"                => prettyPrint(a) + " filter (" + prettyPrint(f) + ")"
     case q"$a withFailureMessage $msg"      => prettyPrint(a) + " withFailureMessage (" + show(msg) + ")"
@@ -94,7 +94,6 @@ trait BaseParsersImpl extends ParserImplBase { self: ParseInput with ParseError 
     case q"$_.toElemOrRange($x)"            => show(x)
     case _                                  => super.prettyPrint(tree)
   }
-
 
   private def parseElem(a: c.Tree, rs: ResultsStruct) = {
     q"""
@@ -396,7 +395,7 @@ trait BaseParsersImpl extends ParserImplBase { self: ParseInput with ParseError 
     val callResult = TermName(c.freshName)
     val call = params.map{
         case q"paramRule(${x: String})" => q"${TermName(x)}"
-        case q"paramRule(${x: String}, ..${args: List[String]})" => 
+        case q"paramRule(${x: String}, ..${args: List[String]})" =>
           val in = TermName(c.freshName("input"))
           val offs = TermName(c.freshName("offset"))
           q"($in: $inputType, $offs: Int) => {${TermName(x)}($in, ..${args.map(TermName(_))}, $offs)}"
@@ -423,7 +422,7 @@ trait BaseParsersImpl extends ParserImplBase { self: ParseInput with ParseError 
     val callResult = TermName(c.freshName)
     val call = params.map{
       case q"paramRule[$_](${x: String})" => q"${TermName(x)}"
-      case x => 
+      case x =>
       c.echo(c.enclosingPosition, show(x))
       x
       } match {

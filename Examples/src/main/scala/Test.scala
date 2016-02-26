@@ -9,7 +9,7 @@
 //because warnings
 
 import fastparsers.framework.getAST
-import fastparsers.framework.implementations.{FastParsers, FastArrayParsers}
+import fastparsers.framework.implementations.{FastParsers, FastPrinters, FastArrayParsers}
 import fastparsers.framework.parseresult._
 import fastparsers.input.InputWindow
 import fastparsers.parsers.Parser
@@ -23,7 +23,7 @@ object Test {
 
  def main(args: Array[String])  {
 
-  import FastParsers._
+  import FastPrinters._
   val parser = FastParser {
     /*def rule = 'a' ~ 'c'
     def rule2(p: Parser[List[Char]]) = 'a' ~ p
@@ -31,19 +31,17 @@ object Test {
 
     def rule1(p: Parser[List[Char]], y: Int): Parser[Any] = 'a' ~ p ~ rule2(y)
     def rule2(x: Int): Parser[Any]  = rule1(repN('c', x), x + 1) | 'b'*/
-    def parens[T](p: Parser[T]) = 'x' ~ p ~ 'x'
-    def test = parens('a' ~ 'y')
+    //def parens[T](p: Parser[T]) = 'x' ~ p ~ 'x'
+    //def test = parens('a' ~ 'y')
 
-    /*def parens(p: Parser[(Char, Char)]) = 'x' ~ p ~ 'x'
+    def parens(p: Parser[(Char, Char)]) = 'x' ~ p ~ 'x'
     def test = parens('a' ~ 'y') //TODO correct this bug*/
-    def test2 = 'x' ~ ('a' ~ 'y') ~  'x' //~ ('a' ~ 'b') ~ 'x'
+    def test2 = 'a' ~ ('a' ~ 'b') ~ 'x'
+    def test3 = ('a' ~ 'b') map { case a ~ b => (a, b) }
 
   }
 
-  parser.test("xayx  cacccb") match {
-    case Success(x) =>
-      println(x)
-    case Failure(msg) => println("failure : " + msg)
-  }
+  pprint.pprintln(parser.ruleMap)
+
  }
 }
