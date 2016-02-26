@@ -155,7 +155,7 @@ trait ParserImplBase { self: ParseInput with ParseError =>
       case t if t <:< typeOf[AnyRef] => q"null"
       case t if t =:= typeOf[Any] => q"null"
       case t => q"fastparsers.tools.Default.value[$t]" //NEED to find a better way !!!!
-      /*case x @ TypeRef(_, y, _)  => 
+      /*case x @ TypeRef(_, y, _)  =>
         /*y match {
           case y : TypeName => c.echo(c.enclosingPosition, "stuff")
           case _ => c.echo(c.enclosingPosition, "nostuff")
@@ -204,4 +204,3 @@ trait DontIgnoreResults extends IgnoreResultsPolicy { self: ParseInput with Pars
 trait IgnoreResults extends IgnoreResultsPolicy { self: ParseInput with ParseError =>
   override def ignoreResult(rs: ResultsStruct): ResultsStruct = new ResultsStruct with IgnoreResult
 }
-

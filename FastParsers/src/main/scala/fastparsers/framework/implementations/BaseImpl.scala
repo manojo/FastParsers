@@ -5,19 +5,22 @@ import fastparsers.tools.TreeTools
 import fastparsers.input.ParseInput
 import scala.reflect.macros.whitebox.Context
 import scala.collection.mutable.HashMap
-import fastparsers.framework.ruleprocessing.{RuleCombiner, MapRules}
+import fastparsers.framework.ruleprocessing.{ReduceRules, MapRules}
 import fastparsers.parsers.Parser
 
 /**
  * General trait which create the basic needs of a FastParsers implementation.
  *
- * All it does is create the map of rulenames with their code (whitout modification).
+ * All it does is create the map of rulenames with their code (without modification).
  * It must be composed with some Rule transformer which will expand the rules wich will
- * be combined to form the final object by the fastparsers.framework.ruleprocessing.RuleCombiner.
+ * be combined to form the final object by a `fastparsers.framework.ruleprocessing.ReduceRules`.
+ * There are (currently) two reducers:
+ *   - `RuleCombiner`, which generates actual, optimized code
+ *   - `RulePrinter`, which prettyprints rules.
+ *
  * It must also be composed with a fastparsers.input.ParseInput to allow access on the fastparsers.input.
  */
-trait BaseImpl extends TreeTools {
-  self: MapRules with RuleCombiner with ParseInput =>
+trait BaseImpl extends TreeTools { self: MapRules with ReduceRules with ParseInput =>
   val c: Context
 
   import c.universe._
@@ -29,7 +32,8 @@ trait BaseImpl extends TreeTools {
   }
 
   /**
-   * Expand each rule in a imperative style without considering other rules (i.e def rule2 = rule1 is not expanded to the code of rule1)
+   * Expand each rule in an imperative style without considering other rules
+   * (i.e def rule2 = rule1 is not expanded to the code of rule1)
    * @return An HashMap containing (rulename, corresponging code)
    */
   private def getBasicStructure(rules: c.Tree) = {
@@ -39,7 +43,6 @@ trait BaseImpl extends TreeTools {
       case TypeRef(_, y, List(z)) if y.fullName == "fastparsers.parsers.Parser" => z //q"Any".tpe//q"var x:${d.tpe}" //check it is a code
       case v => c.abort(c.enclosingPosition, "incorrect parser type " + show(v))
     }
-
 
     val rulesMap = new HashMap[String, RuleInfo]()
     c.typecheck(rules) match {

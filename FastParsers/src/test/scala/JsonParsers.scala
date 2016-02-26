@@ -11,7 +11,7 @@ object JsonParsers {
 
   object JSonImpl1 {
     import fastparsers.framework.implementations.FastParsers._
-    val jsonparser = FastParser{
+    val jsonparser = FastParser {
       def value:Parser[Any] = whitespaces ~> (obj | arr | stringLit | decimalNumber | "null" | "true" | "false")
       def obj:Parser[Any] = '{' ~> repsep(member,",") <~ "}"
       def arr:Parser[Any] = '[' ~> repsep(value,",") <~ "]"
@@ -29,7 +29,7 @@ object JsonParsers {
 
   object JSonImpl2 {
     import fastparsers.framework.implementations.FastParsersCharArray._
-    val jsonparser = FastParsersCharArray{
+    val jsonparser = FastParsersCharArray {
       def value:Parser[Any] = whitespaces ~> (obj | arr | stringLit | decimalNumber | nullValue | trueValue | falseValue)
       def obj:Parser[Any] = '{' ~> repsep(member,comma) <~ closeBracket
       def arr:Parser[Any] = '[' ~> repsep(value,comma) <~ closeSBracket
@@ -40,7 +40,7 @@ object JsonParsers {
 
   object JSonImpl3 {
     import fastparsers.framework.implementations.FastParsersCharArrayNoInline._
-    val jsonparser = FastParsersCharArray{
+    val jsonparser = FastParsersCharArray {
       def value:Parser[Any] = whitespaces ~> (obj | arr | stringLit | decimalNumber | nullValue | trueValue | falseValue)
       def obj:Parser[Any] = '{' ~> repsep(member,comma) <~ closeBracket
       def arr:Parser[Any] = '[' ~> repsep(value,comma) <~ closeSBracket
@@ -50,7 +50,7 @@ object JsonParsers {
 
   object JSonImpl4 {
     import fastparsers.framework.implementations.FastParsersCharArrayDefaultErrors._
-    val jsonparser = FastParsersCharArray{
+    val jsonparser = FastParsersCharArray {
       def value:Parser[Any] = whitespaces ~> (obj | arr | stringLit | decimalNumber | nullValue | trueValue | falseValue)
       def obj:Parser[Any] = '{' ~> repsep(member,comma) <~ closeBracket
       def arr:Parser[Any] = '[' ~> repsep(value,comma) <~ closeSBracket
@@ -60,7 +60,7 @@ object JsonParsers {
 
   object JSonImpl5 {
     import fastparsers.framework.implementations.FastParsersCharArrayIgnoreResults._
-    val jsonparser = FastParsersCharArray{
+    val jsonparser = FastParsersCharArray {
       def value:Parser[Any] = whitespaces ~> (obj | arr | stringLit | decimalNumber | nullValue | trueValue | falseValue)
       def obj:Parser[Any] = '{' ~> repsep(member,comma) <~ closeBracket
       def arr:Parser[Any] = '[' ~> repsep(value,comma) <~ closeSBracket
@@ -71,7 +71,7 @@ object JsonParsers {
   object JSonImpl6 {
     import fastparsers.framework.implementations.FastParsersCharArray._
     import fastparsers.input.InputWindow.InputWindow
-    val jsonparser = FastParsersCharArray{
+    val jsonparser = FastParsersCharArray {
       def value:Parser[Any] = whitespaces ~> (obj | arr | stringLit ^^ (_.toString) | decimalNumber | nullValue | trueValue | falseValue)
       def obj:Parser[Any] = '{' ~> repsep(member,comma) <~ closeBracket
       def arr:Parser[Any] = '[' ~> repsep(value,comma) <~ closeSBracket
