@@ -7,7 +7,7 @@ import fastparsers.error.ParseError
  * Created by Eric on 22.04.14.
  * Implementation of RepParsers
  */
-trait RepParsersImpl extends ParserImplBase { self: ParseInput  with ParseError =>
+trait RepParsersImpl extends ParserImplBase { self: ParseInput with ParseError =>
 
   import c.universe._
 
