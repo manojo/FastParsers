@@ -7,7 +7,8 @@ import fastparsers.error.ParseError
 /**
  * Implementation of Basic combinators
  */
-trait BaseParsersImpl extends ParserImplBase { self: ParseInput with ParseError with IgnoreResultsPolicy =>
+trait BaseParsersImpl extends ParserImplBase {
+    self: ParseInput with ParseError with IgnoreResultsPolicy =>
 
   import c.universe._
 
