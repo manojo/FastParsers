@@ -42,6 +42,11 @@ trait BaseParseQueryImpl extends ParseQueryImplBase { self: BaseParsersImpl =>
    */
   override def transform(tree: c.Tree): c.Tree = tree match {
     //@TODO write transformations here!
+    case q"$foo map[$d2] $f" => foo match {
+      case x => println("bla"); tree
+      case _ => println(show(foo)); tree
+    }//transformMap(foo, d2, f)
+      //transformConcat(a, d1, b, d2, f)
     case _ => super.transform(tree)
   }
 }

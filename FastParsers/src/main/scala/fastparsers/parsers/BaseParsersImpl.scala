@@ -15,7 +15,7 @@ trait BaseParsersImpl extends ParserImplBase {
   override def expand(tree: c.Tree, rs: ResultsStruct) = tree match {
     case q"$_.baseParsers[$d]($a)" => expand(a, rs)
     case q"$_.toElem(($a,$b))"     => parseRange(a, b, rs)
-    case q"$_.toElem($elem)"       => parseElem(elem, rs)
+    case q"$_.toElem($elem)"       => expand(q"_.acceptIf(_ == $elem)", rs)
     case q"$_.elemParser($elem)"   => parseElem(elem, rs)
     case q"$_.range($a,$b)"        => parseRange(a, b, rs)
     case q"$_.accept(..$a)"        => parseAccept(a,negate = false,rs)
@@ -37,7 +37,7 @@ trait BaseParsersImpl extends ParserImplBase {
     case q"$a <~[$d] $b"                    => parseIgnoreRight(a, b, d, rs)
     case q"$a ||[$d] $b"                    => parseOr(a, b, d, rs)
     case q"$a |[$d] $b"                     => parseOr(a, b, d, rs)
-    case q"$a ^^[$d] $f"                    => parseMap(a, f, d, rs)
+    case q"$a ^^[$d] $f"                    => expand(q"$a map[$d] $f", rs)
     case q"$a map[$d] $f"                   => parseMap(a, f, d, rs)
     case q"$a ^^^[$d] $v"                   => parseValue(a, v, d, rs)
     case q"$a filter[$d] $f"                => parseFilter(a, f, d, rs)
@@ -67,7 +67,7 @@ trait BaseParsersImpl extends ParserImplBase {
     case q"$_.elemParser($elem)"   => elem.toString
     case q"$_.accept(..$a)"        => "accept(" + a.map(prettyPrint(_)) + ")"
     case q"$_.not(..$a)"           => "not(" + a.map(prettyPrint(_)) + ")"
-    case q"$_.acceptIf($f)"        => "acceptIf(" + prettyPrint(f) + ")"
+    case q"$_.acceptIf($f)"        => "acceptIf(" + show(f) + ")"
     case q"$_.wildcard"            => "wildcard"
     case q"$_.guard[$d]($a)"       => "guard(" + prettyPrint(a) + ")"
     case q"$_.takeWhile($f)"       => "takeWhile(" + prettyPrint(f) + ")"
@@ -83,8 +83,8 @@ trait BaseParsersImpl extends ParserImplBase {
     case q"$a <~[$d] $b"                    => "(" + prettyPrint(a) + " <~ " + prettyPrint(b) + ")"
     case q"$a ||[$d] $b"                    => prettyPrint(a) + " | " + prettyPrint(b)
     case q"$a |[$d] $b"                     => prettyPrint(a) + " | " + prettyPrint(b)
-    case q"$a ^^[$d] $f"                    => prettyPrint(a) + " ^^(" + showCode(f) + ")"
-    case q"$a map[$d] $f"                   => prettyPrint(a) + " map (" + showCode(f) + ")"
+    case q"$a ^^[$d] $f"                    => prettyPrint(a) + " ^^(" + show(f) + ")"
+    case q"$a map[$d] $f"                   => prettyPrint(a) + " map (" + show(f) + ")"
     case q"$a ^^^[$d] $v"                   => prettyPrint(a) + " ^^^ (" + prettyPrint(v) + ")"
     case q"$a filter[$d] $f"                => prettyPrint(a) + " filter (" + prettyPrint(f) + ")"
     case q"$a withFailureMessage $msg"      => prettyPrint(a) + " withFailureMessage (" + show(msg) + ")"
