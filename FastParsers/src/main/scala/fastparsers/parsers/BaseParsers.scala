@@ -28,9 +28,6 @@ trait BaseParsers[Elem, Input] {
   @compileTimeOnly("can't be used outside FastParser")
   implicit def toElemOrRange(elem: (Elem,Elem)): ElemOrRange = ???
 
-
-
-
   @compileTimeOnly("toElem can't be used outside FastParser")
   implicit def toElem(elem: Elem): Parser[Elem] = ???
 
@@ -42,7 +39,6 @@ trait BaseParsers[Elem, Input] {
 
   @compileTimeOnly("accept can't be used outside FastParser")
   def accept(p1: ElemOrRange, p2: ElemOrRange*):Parser[Elem] = ???
-
 
   @compileTimeOnly("not can't be used outside FastParser")
   def not(p1: ElemOrRange, p2: ElemOrRange*): Parser[Elem] = ???
