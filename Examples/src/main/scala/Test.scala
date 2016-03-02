@@ -32,7 +32,9 @@ object Test {
     import FastPrinters._
     val parser = FastParser {
       def test = acceptIf(isDigit) ~ acceptIf(isDigit)
-      def test2 = test map { case a ~ b => ((a - '0') + (b - '0')) }
+      def test2 = test map {
+        case a ~ b => (a - '0', b - '0')
+      }
     }
     parser
   }
@@ -40,8 +42,8 @@ object Test {
   val parserPost = {
     import TransformedPrinters._
     val parser = FastParser {
-      def test2 = (acceptIf(isDigit) ~ acceptIf(isDigit)) map {
-        case a ~ b => ((a - '0') + (b - '0'))
+      def test2 = acceptIf(isDigit) ~ acceptIf(isDigit) map {
+        case a ~ b => (a - '0', b - '0')
       }
     }
     parser
