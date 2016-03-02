@@ -42,32 +42,66 @@ trait BaseParseQueryImpl extends ParseQueryImplBase { self: BaseParsersImpl =>
    *   - Map_Map over Parser
    *     T[[ T[[ p map f map g ]]  =  T[[ p ]] map (f andThen g) ]]
    */
-  override def transform(tree: c.Tree): c.Tree = tree match {
+  override def transform(tree: c.Tree): c.Tree = unwrap(tree) match {
     case q"$foo map[$t] $f" =>
       transformMap(foo, f)
     case t =>
       println("Any match in `transform`")
       println(show(t))
+      println()
       super.transform(tree)
   }
 
   private def unwrap(parser: c.Tree): c.Tree = {
     parser match {
       case q"$_.baseParsers[$t]($inner)" =>
-        println("unwrapping..." + show(inner)); inner
+        /*println("unwrapping..." + show(inner));*/ inner
       case q"compound[$t]($inner)"  =>
-        println("unwrapping2..." + show(inner)); inner
+        /*println("unwrapping2..." + show(inner));*/ inner
       case q"$_.compound[$t]($inner)"  =>
-        println("unwrapping3..." + show(inner)); inner
+        /*println("unwrapping3..." + show(inner));*/ inner
       case _ => parser
     }
   }
 
   private def transformMap(parser: c.Tree, f: c.Tree): c.Tree = {
     unwrap(parser) match {
+      case q"$_.rep[$d]($a, $min, $max)" =>
+        println("matched on a repetition")
+        println()
+
+        f match {
+          case q"($arg => $body)" =>
+            println("matching function")
+            println()
+
+            body match {
+              case q"$_.foldLeft[$d2]($z)($comb)" =>
+                println("matching function application syntax")
+                println(show(d2))
+                println(show(z))
+                println()
+                val myTree = q"$a foldLeft[$d2]($z, $comb)"
+
+                println("the transform is")
+                println(show(myTree))
+                println()
+                myTree
+
+
+              case _ =>
+                println("not matching sel syntax")
+                println(show(body))
+                println()
+                q"${transform(parser)} map $f"
+            }
+        }
+
       case q"$_.baseParsers[$_]($a) ~[$_] $b" =>
         println("It DID match on `transformMap`")
         println(s"Show: ${show(f)}")
+        println()
+
         /*a match {
           case q"$f($s)" => matchCase(s)
           case _ =>
@@ -76,9 +110,12 @@ trait BaseParseQueryImpl extends ParseQueryImplBase { self: BaseParsersImpl =>
         }*/
         matchCase(f)
 
-      case _ =>
+      case unwrapped =>
         println("It didn't match on `transformMap`")
-        q"$parser map $f"
+        println(show(unwrapped))
+        println()
+
+        q"${transform(parser)} map $f"
     }
   }
 
@@ -274,7 +311,7 @@ trait FullParseQueryImpl
     with TokenParsersImpl {
 
   self: ParseInput
-        with ParseError
-        with IgnoreResultsPolicy
-        with StringLikeInput =>
+    with ParseError
+    with IgnoreResultsPolicy
+    with StringLikeInput =>
 }
