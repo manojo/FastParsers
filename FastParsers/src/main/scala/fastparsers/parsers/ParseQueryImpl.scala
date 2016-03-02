@@ -1,16 +1,15 @@
 package fastparsers.parsers
 
-import fastparsers.input._
-import fastparsers.framework._
 import fastparsers.error.ParseError
+import fastparsers.input._
+
+import scala.collection.mutable.ListBuffer
 
 /**
  * Since it is all a big cake pattern we need to have a `ParseQueryImplBase`
  * trait that we mix in to whatever parsers we want to transform
  */
 trait ParseQueryImplBase { self: ParserImplBase  =>
-
-  import c.universe._
 
   /**
    * The function that transforms the trees according to the
@@ -33,6 +32,9 @@ trait BaseParseQueryImpl extends ParseQueryImplBase { self: BaseParsersImpl =>
    *     T[[ (a ~ b) map { case (a, b) => f3(f1(a), f2(b)) } ]] =
    *     (T[[ a ]] map f1 ~ T[[ b ]] map f2) map { case (a, b) => f3(a, b) }
    *
+   *     For now, we expect f3 to be either a case class constructor (this case
+   *     also covers tuples) or method (which can also be an anonymous functions).
+   *
    *   - Concat_2: Turning parsers into recognizers (make them id recognizers for now)
    *     T[[ (a ~ b) map { case (a, b) => f(a) } ]] = T[[ a ]] map f <~ recognize(T[[ b ]])
    *     T[[ (a ~ b) map { case (a, b) => f(b) } ]] = recognize(T[[ a ]]) ~> T[[ b ]] map f
@@ -41,17 +43,177 @@ trait BaseParseQueryImpl extends ParseQueryImplBase { self: BaseParsersImpl =>
    *     T[[ T[[ p map f map g ]]  =  T[[ p ]] map (f andThen g) ]]
    */
   override def transform(tree: c.Tree): c.Tree = tree match {
-    //@TODO write transformations here!
-    case _ => super.transform(tree)
+    case q"$foo map[$t] $f" =>
+      transformMap(foo, f)
+    case t =>
+      println("Any match in `transform`")
+      println(show(t))
+      super.transform(tree)
+  }
+
+  private def unwrap(parser: c.Tree): c.Tree = {
+    parser match {
+      case q"$_.baseParsers[$t]($inner)" =>
+        println("unwrapping..." + show(inner)); inner
+      case q"compound[$t]($inner)"  =>
+        println("unwrapping2..." + show(inner)); inner
+      case q"$_.compound[$t]($inner)"  =>
+        println("unwrapping3..." + show(inner)); inner
+      case _ => parser
+    }
+  }
+
+  private def transformMap(parser: c.Tree, f: c.Tree): c.Tree = {
+    unwrap(parser) match {
+      case q"$_.baseParsers[$_]($a) ~[$_] $b" =>
+        println("It DID match on `transformMap`")
+        println(s"Show: ${show(f)}")
+        /*a match {
+          case q"$f($s)" => matchCase(s)
+          case _ =>
+            println("FAILED before matchcase")
+            a
+        }*/
+        matchCase(f)
+
+      case _ =>
+        println("It didn't match on `transformMap`")
+        q"$parser map $f"
+    }
+  }
+
+  private def matchCase(m: c.Tree): c.Tree = {
+    m match {
+        /*
+      case q"$c match { case ..$cases }" =>
+        println("YEAH")
+        println(show(cases))
+        m
+      case q"{ case ..$cases }" =>
+        println("YEAH2")
+        println(show(cases))
+        m
+      case q"$_ match { case ..$cases }" =>
+        println("YEAH3")
+        println(show(cases))
+        m
+      case q"$b match { case ..$cases }" =>
+        println("YEAH4")
+        println(show(cases))
+        println(show(b))
+        b
+      case q"($x: $t) => $body" =>
+        println("YEAH4")
+        println(show(x))
+        println(show(body))
+        body
+        */
+      case q"($x => $x2 match { case ..$cases })" =>
+        println("YEAH5")
+        println(show(x))
+        println(show(cases))
+        processCases(cases)
+      case _ => println("FAIL"); println(show(m)); m
+    }
+  }
+
+  private def processCases(cs: List[c.Tree]): c.Tree = cs.head match {
+    case cq"$pat => $body" =>
+      println("SHOOT3")
+      println(show(pat))
+      println(show(body))
+      println(showRaw(body))
+      body
+    case _ =>
+      println("SHOOT-fail")
+      cs.head
+  }
+
+  /** Inspect a function and tell us information about its inner
+    * details, like which variables are used and which are not.
+    *
+    * Use the whitebox context because `FastParsers` use it by default.
+    */
+  class Inspector {
+    import c.universe._
+
+    def getUsedVars(f: Tree): List[Symbol] = {
+      val pc = new ParamCollector
+      pc.traverse(f)
+      val upc = new UsedParamsCollector(pc.params)
+      upc.traverse(f)
+      upc.usedVariables.toList
+    }
+
+    class UsedParamsCollector(params: ListBuffer[Symbol]) extends Traverser {
+
+      private[Inspector] val usedVariables = ListBuffer[Symbol]()
+
+      def isUsed(s: Symbol): Boolean =
+        s.isParameter && params.contains(s)
+
+      def isNotStored(s: Symbol): Boolean =
+        !usedVariables.contains(s)
+
+      override def traverse(tree: Tree) = tree match {
+        case i @ Ident(_) =>
+          val sym = i.symbol
+          if(isUsed(sym) && isNotStored(sym))
+            usedVariables += sym
+
+        // Ignore var references in match clause
+        case m @ Match(_, caseDefs) =>
+          caseDefs.map(traverse)
+
+        // Ignore var references in if expr
+        case i @ If(_, ifTrue, ifFalse) =>
+          traverse(ifTrue)
+          traverse(ifFalse)
+
+        case _ =>
+          super.traverse(tree)
+      }
+    }
+
+    class BindVariableCollector extends Traverser {
+
+      private[Inspector] val termNames = ListBuffer[TermName]()
+
+      override def traverse(tree: Tree) = tree match {
+        case d @ Bind(n, _) =>
+          val tn = n.toTermName
+          if(!termNames.contains(tn)) {
+            termNames += tn
+          }
+        case _ =>
+          println("invalid expression, couldn't find bind")
+      }
+
+    }
+
+
+    class ParamCollector extends Traverser {
+
+      private[Inspector] val params = ListBuffer[Symbol]()
+
+      override def traverse(tree: Tree) = tree match {
+        case vd @ ValDef(mods, name, tpt, rhs) =>
+          params += vd.symbol
+          traverse(rhs)
+        case _ =>
+          super.traverse(tree)
+      }
+
+    }
   }
 }
+
 
 
 /**
  * responsible for transforming rep parsers
  */
 trait RepParseQueryImpl extends ParseQueryImplBase { self: RepParsersImpl =>
-  import c.universe._
 
   /**
    * The following rules apply:
@@ -93,7 +255,6 @@ trait RepParseQueryImpl extends ParseQueryImplBase { self: RepParsersImpl =>
  * responsible for transforming token parsers
  */
 trait TokenParseQueryImpl extends ParseQueryImplBase { self: TokenParsersImpl =>
-  import c.universe._
 
   override def transform(tree: c.Tree): c.Tree = tree match {
     //@TODO write transformations here!

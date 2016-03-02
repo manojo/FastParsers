@@ -9,10 +9,16 @@
 //because warnings
 
 import fastparsers.framework.getAST
-import fastparsers.framework.implementations.{FastParsers, FastPrinters, FastArrayParsers}
+import fastparsers.framework.implementations.{
+  FastParsers,
+  FastPrinters,
+  FastArrayParsers,
+  TransformedPrinters
+}
 import fastparsers.framework.parseresult._
 import fastparsers.input.InputWindow
 import fastparsers.parsers.Parser
+
 import scala.collection.mutable.HashMap
 import scala.language.reflectiveCalls
 import scala.language.implicitConversions
@@ -20,28 +26,37 @@ import scala.reflect.ClassTag
 
 
 object Test {
+  def isDigit(c: Char) = (c >= '0') && (c <= '9')
+
+  val parserPre = {
+    import FastPrinters._
+    val parser = FastParser {
+      def test = acceptIf(isDigit) ~ acceptIf(isDigit)
+      def test2 = test map {
+        case a ~ b => (a - '0', b - '0')
+      }
+    }
+    parser
+  }
+
+  val parserPost = {
+    import TransformedPrinters._
+    val parser = FastParser {
+      def test2 = acceptIf(isDigit) ~ acceptIf(isDigit) map {
+        case a ~ b => (a - '0', b - '0')
+      }
+    }
+    parser
+  }
 
  def main(args: Array[String])  {
 
-  import FastPrinters._
-  val parser = FastParser {
-    /*def rule = 'a' ~ 'c'
-    def rule2(p: Parser[List[Char]]) = 'a' ~ p
-    def rule3(y: Int) = rule2(repN('b', y))
 
-    def rule1(p: Parser[List[Char]], y: Int): Parser[Any] = 'a' ~ p ~ rule2(y)
-    def rule2(x: Int): Parser[Any]  = rule1(repN('c', x), x + 1) | 'b'*/
-    //def parens[T](p: Parser[T]) = 'x' ~ p ~ 'x'
-    //def test = parens('a' ~ 'y')
-
-    def parens(p: Parser[(Char, Char)]) = 'x' ~ p ~ 'x'
-    def test = parens('a' ~ 'y') //TODO correct this bug*/
-    def test2 = 'a' ~ ('a' ~ 'b') ~ 'x'
-    def test3 = ('a' ~ 'b') map { case a ~ b => (a, b) }
-
-  }
-
-  pprint.pprintln(parser.ruleMap)
+  println("===============BEFORE============")
+  pprint.pprintln(parserPre.ruleMap("test2"))
+  println()
+  println("===============AFTER=============")
+  pprint.pprintln(parserPost.ruleMap("test2"))
 
  }
 }
