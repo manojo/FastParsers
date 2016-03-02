@@ -72,7 +72,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule1 test") {
-    shouldSucced(parser.rule1){
+    shouldSucceed(parser.rule1){
       "bacb" gives (('b', 'a'), ('c', 'b'))
     }
     shouldFail(parser.rule1){
@@ -80,7 +80,7 @@ class ParserSpecs extends FunSuite {
     }
   }
   test("Rule3 test") {             //('a' ~ 'b').rep(2,3) ~ 'c'
-    shouldSucced(parser.rule3)(
+    shouldSucceed(parser.rule3)(
       "ababc" gives (repeat(('a', 'b'), 2), 'c'),
       "abababc" gives (repeat(('a', 'b'), 3), 'c')
     )
@@ -89,7 +89,7 @@ class ParserSpecs extends FunSuite {
     )
   }
   test("Rule4 test") {  //def rule4 = ('a' ~ 'b').+
-    shouldSucced(parser.rule4)(
+    shouldSucceed(parser.rule4)(
       "ab" gives List(('a', 'b')),
       "abab" gives repeat(('a', 'b'), 2),
       "ababab" gives repeat(('a', 'b'), 3)
@@ -100,7 +100,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule5 test") {  //('a' ~ 'b').* ~ 'c'
-    shouldSucced(parser.rule5)(
+    shouldSucceed(parser.rule5)(
       "c" gives (Nil,'c'),
       "abc" gives (List(('a', 'b')),'c'),
       "ababababc" gives (repeat(('a', 'b'),4),'c')
@@ -111,7 +111,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule6 test") {  //('a' ~ ('b' || 'c')).?
-    shouldSucced(parser.rule6)(
+    shouldSucceed(parser.rule6)(
       "" gives None,
       "ab" gives Some(('a', 'b')),
       "ac" gives Some(('a', 'c'))
@@ -122,7 +122,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule10 test") {  //range('0', '9') ~> rep(range('a', 'z')) <~ '0'
-    shouldSucced(parser.rule10)(
+    shouldSucceed(parser.rule10)(
       "00" gives Nil,
       "0a0" gives List('a'),
       "7abcd0" gives List('a', 'b', 'c', 'd')
@@ -133,7 +133,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule12 test") {  //guard('a' ~ 'b' ~ 'c') ~ rep(range('a', 'z'))
-    shouldSucced(parser.rule12)(
+    shouldSucceed(parser.rule12)(
       "abc" gives List('a', 'b', 'c'),
       "abcdef" gives List('a', 'b', 'c', 'd', 'e', 'f'),
       "abc7" gives List('a', 'b', 'c')
@@ -144,7 +144,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule18 test") {  //phrase(rep('a',3,3) | (rep('a',2,2) ~ 'b') ^^ {case (x:List[Char],y:Char) => x ++ List(y)})
-    shouldSucced(parser.rule18)(
+    shouldSucceed(parser.rule18)(
       "aaa" gives List('a', 'a', 'a'),
       "aab" gives List('a', 'a', 'b')
     )
@@ -154,7 +154,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule19 test") {  //phrase(rep('a',0,3)) | rep('a',0,4))
-    shouldSucced(parser.rule19)(
+    shouldSucceed(parser.rule19)(
       ""    gives Nil, "a" gives List('a'),
       "aa"  gives List('a', 'a'),
       "aaa" gives List('a', 'a', 'a'),
@@ -166,7 +166,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule20 test") {  //phrase((rep('a',0,3) ~ 'b') ^^ {case (x:List[Char],y:Char) => x ++ List(y)} | rep('a' || 'b'))
-    shouldSucced(parser.rule20)(
+    shouldSucceed(parser.rule20)(
       "b"     gives List('b'),
       "ab"    gives List('a', 'b'),
       "aab"   gives List('a', 'a', 'b'),
@@ -181,7 +181,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule21 test") {  //((rep(range('a', 'z'))) filter {case x:List[_] => x.mkString == "salut" || x.mkString == "hello"})
-    shouldSucced(parser.rule21)(
+    shouldSucceed(parser.rule21)(
       "salut" gives List('s', 'a', 'l', 'u', 't'),
       "hello" gives List('h', 'e', 'l', 'l', 'o')
 
@@ -192,13 +192,13 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule22 test") {  //repFold(range('0', '9'))(0){(y:Int,x:Char) => x.asDigit +y}
-    shouldSucced(parser.rule22)(
+    shouldSucceed(parser.rule22)(
       "123" gives 6,"" gives 0,"b" gives 0, "99" gives 18
     )
   }
 
   test("Rule34 test") {  //rule33 ~ rule33  -> rep(rep(0 - 9,3),2)
-    shouldSucced(parser.rule34)(
+    shouldSucceed(parser.rule34)(
       "123325" gives (List('1', '2', '3'), List('3', '2', '5'))
     )
     shouldFail(parser.rule34) (
@@ -207,14 +207,14 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule35 test") {  //rule33 ~ rule33  -> rep(rep(0 - 9,3),2)
-    shouldSucced(parser.rule35)(
+    shouldSucceed(parser.rule35)(
       "" gives Nil,
       "abcd" gives List('a', 'b', 'c', 'd')
     )
   }
 
   test("Rule36 test") {  //'a' ~ takeWhile(_ != 'x')
-    shouldSucced(parser.rule36)(
+    shouldSucceed(parser.rule36)(
       "a" gives ('a',""),
       "abbdsadxsadsad" gives ('a',"bbdsad")
     )
@@ -225,7 +225,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule37 test"){
-    shouldSucced(parser.rule37)(
+    shouldSucceed(parser.rule37)(
       "aabbccddeeff" gives "aabbccddee",
       "aabbccddee" gives "aabbccddee"
     )
@@ -235,7 +235,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule38 test"){
-    shouldSucced(parser.rule38)(
+    shouldSucceed(parser.rule38)(
       "b" gives ('b',None),
       "bb" gives ('b',Some('b'))
     )
@@ -244,7 +244,7 @@ class ParserSpecs extends FunSuite {
     )
   }
   test("Rule39 test"){     //repN('a' ~ ('b' || 'c'),3)
-    shouldSucced(parser.rule39)(
+    shouldSucceed(parser.rule39)(
       "ababab" gives repeat(('a', 'b'),3),
       "acacac" gives repeat(('a', 'c'),3),
       "abacac" gives ('a', 'b')::('a', 'c')::('a', 'c')::Nil
@@ -255,7 +255,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule40 test"){//repsep(('a' || 'b'),repN('x' ~ 'y',2))
-    shouldSucced(parser.rule40)(
+    shouldSucceed(parser.rule40)(
       "" gives Nil,
       "a" gives List('a'),
       "b" gives List('b'),
@@ -267,7 +267,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule41 test"){//'[' ~> repsep1(number,', ') <~']'
-    shouldSucced(parser.rule41)(
+    shouldSucceed(parser.rule41)(
       "[1]" gives List("1"),
       "[1, 2, 3,  40]" gives List("1", "2", "3", "40")
     )
@@ -280,7 +280,7 @@ class ParserSpecs extends FunSuite {
     def rule42:fastparsers.parsers.Parser[(Char,Any)] = 'a' ~ rule43
     def rule43:fastparsers.parsers.Parser[Any] = 'b' || rule42
   */
-    shouldSucced(parser.rule42)(
+    shouldSucceed(parser.rule42)(
       "ab" gives ('a', 'b'),
       "aab" gives ('a',('a', 'b'))
     )
@@ -290,7 +290,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule44 test"){//range('0', '9').foldLeft[Int](0,(acc,c) => acc + c.asDigit)
-    shouldSucced(parser.rule44)(
+    shouldSucceed(parser.rule44)(
       "" gives 0,
       "123" gives 6,
       "1234" gives 10
@@ -298,7 +298,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule45 test"){
-    shouldSucced(parser.rule45)(
+    shouldSucceed(parser.rule45)(
       "123" gives 6,
       "1234" gives 10
     )
@@ -308,7 +308,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule46 test"){
-    shouldSucced(parser.rule46)(
+    shouldSucceed(parser.rule46)(
       "" gives 0,
       "123" gives 6,
       "1234" gives 10
@@ -316,7 +316,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule47 test"){
-    shouldSucced(parser.rule47)(
+    shouldSucceed(parser.rule47)(
       "123" gives 6,
       "1234" gives 10
     )
@@ -326,14 +326,14 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule48 test"){    //wildcard.foldLeft("",(acc:String,c:Char) => acc + c)
-    shouldSucced(parser.rule48)(
+    shouldSucceed(parser.rule48)(
       "123" gives "123",
       "" gives ""
     )
   }
 
   test("Rule49 test"){   //wildcard.foldRight("",(acc:String,c:Char) => acc + c)
-    shouldSucced(parser.rule49)(
+    shouldSucceed(parser.rule49)(
       "123" gives "321",
       "" gives ""
     )
@@ -341,8 +341,8 @@ class ParserSpecs extends FunSuite {
 
 
   test("Rule50 test"){    //rep1(stringLit)
-    shouldSucced(parser.rule50)(
-      "\"abcd\" \"xcyxc\"" gives List("\"abcd\"", "\"xcyxc\"")
+    shouldSucceed(parser.rule50)(
+      "\"abcd\" \"xcyxc\"" gives List("abcd", "xcyxc")
     )
 
     shouldFail(parser.rule50)(
@@ -351,7 +351,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule51 test"){  //number ~ "hey" ~ number
-    shouldSucced(parser.rule51)(
+    shouldSucceed(parser.rule51)(
       "1 hey 2" gives (("1", "hey"),"2"),
       "43 hey 8782" gives (("43", "hey"),"8782")
     )
@@ -362,7 +362,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule52 test"){  // def rule52 = decimalNumber
-    shouldSucced(parser.rule52)(
+    shouldSucceed(parser.rule52)(
       "3.3" gives "3.3",
       "3.3000" gives "3.3000",
       "3.3020" gives "3.3020",
@@ -378,7 +378,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule53 test"){//number >> (x => take(x) ^^ (y => (x,y)))
-    shouldSucced(parser.rule53)(
+    shouldSucceed(parser.rule53)(
       "5abcde" gives ("5", "abcde"),
       "5abcdef" gives ("5", "abcde"),
       "0" gives ("0", "")
@@ -390,7 +390,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule54 test"){ //('a' || 'b') >> {case 'a' => 'b' ~ rep('1');case 'b' => number}
-    shouldSucced(parser.rule54)(
+    shouldSucceed(parser.rule54)(
       "ab" gives ('b',Nil),
       "ab1" gives ('b',List('1')),
       "ab2" gives ('b',Nil),
@@ -404,7 +404,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule55 test"){ //rule52 >> {case x => ':' ~ rep(rule32) ^^ (y => (x,y))}
-    shouldSucced(parser.rule55)(
+    shouldSucceed(parser.rule55)(
       "3.141592:123" gives ("3.141592", List('1', '2', '3')),
       "3.3:" gives ("3.3",Nil)
     )
@@ -415,7 +415,7 @@ class ParserSpecs extends FunSuite {
   }
 
   test("Rule56 test"){ //(number ^^ (_.toString)) >> {case b => ':' ~> rep(b)}
-    shouldSucced(parser.rule56)(
+    shouldSucceed(parser.rule56)(
       "1:111111" gives repeat("1",6),
       "52:" gives Nil,
       "52:52" gives List("52"),

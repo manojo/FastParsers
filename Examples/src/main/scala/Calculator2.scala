@@ -54,7 +54,7 @@ object Calculator2 {
     def alpha(x:Char) = x >= 'a' && x <= 'z' || x >= 'A' && x <= 'Z'
     def alphanum(x:Char) = alpha(x) || x >= '0' && x <= '9'
 
-    val parser = FastParser{
+    val parser = FastParser {
         def op1 = lit("+") ^^^ '+' | lit("-") ^^^ '-'
         def op2 = lit("*") ^^^ '*' | lit("/") ^^^ '/'
         def funccall = ident ~ (lit("(") ~> repsep(expr,",") <~ ")") ^^ (x => func(x._1.toString,x._2))

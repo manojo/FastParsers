@@ -19,7 +19,7 @@ object TestsHelper extends FunSuite {
 
   case class InputAndResult(in: String, res: Any)
 
-  def shouldSucced[T](rule: (String, Int) => ParseResult[Any,_])
+  def shouldSucceed[T](rule: (String, Int) => ParseResult[Any,_])
                      (tests: InputAndResult*) = {
     tests foreach {
       x => rule(x.in, 0) match {

@@ -105,7 +105,7 @@ trait TokenParsersImpl extends ParserImplBase { self: StringLikeInput  with Pars
         if ($isNEOI) {
           $success = true
           $advance
-          ${rs.assignNew(getInputWindow(q"$beginpos", q"$pos"), inputWindowType)}
+          ${rs.assignNew(getInputWindow(q"$beginpos + 1", q"$pos - 1"), inputWindowType)}
         }
         else {
           $success = false
