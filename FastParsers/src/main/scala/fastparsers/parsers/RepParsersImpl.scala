@@ -320,7 +320,7 @@ trait RepParsersImpl extends ParserImplBase { self: ParseInput with ParseError =
       init: c.Tree,
       f: c.Tree): c.Tree = {
 
-    val fGrammar = buildFoldGrammar(prefix)
+    val (fGrammar, ftyp) = buildFoldGrammar(prefix)
     fGrammar(init, f, typ)
   }
 
@@ -329,15 +329,65 @@ trait RepParsersImpl extends ParserImplBase { self: ParseInput with ParseError =
    */
 
   /**
-   * takes an init, a combine, a type, and gives a new tree
+   * takes an init, a combine, a type, and gives a new tree,
+   * and the type over which we fold:
+   * In the typed world, we have
+   * FoldGrammar[T] = forall R. (R, (R, T) => R) => Grammar[R]
+   * since we live in macro world all of these guys, types and terms
+   * are c.Tree (s)
+   *
    */
   type FoldGrammar = (c.Tree, c.Tree, c.Tree) => c.Tree
 
-  private def buildFoldGrammar(prefix: c.Tree): FoldGrammar = prefix match {
+  private def buildFoldGrammar(prefix: c.Tree): (FoldGrammar, c.Tree) = prefix match {
 
-    case q"$_.repF[$d]($a)" => { (init, combine, typ) =>
-      q"$a foldLeft[$typ]($init, $combine)"
-    }
+    /**
+     * Filter on a FoldGrammar
+     */
+    case q"$pre.filter($pred)" =>
 
+      println("matched a filter pattern on repF")
+
+      val (rec, ftyp) = buildFoldGrammar(pre)
+
+      val tmpAcc = TermName(c.freshName)
+      val tmpElem = TermName(c.freshName)
+
+      val k: FoldGrammar = { (init, combine, typ) =>
+        val newCombine =
+          q"""($tmpAcc: $typ, $tmpElem: $ftyp) =>
+            if ($pred($tmpElem)) $combine($tmpAcc, $tmpElem)
+            else $tmpAcc
+          """
+        rec(init, c.typecheck(newCombine) ,typ)
+      }
+      (k, ftyp)
+
+    /**
+     * Filter on a FoldGrammar
+     */
+    case q"$pre.map[$d]($f)" =>
+
+      println("matched a map pattern on repF")
+
+      val (rec, ftyp) = buildFoldGrammar(pre)
+
+      val tmpAcc = TermName(c.freshName)
+      val tmpElem = TermName(c.freshName)
+
+      val k: FoldGrammar = { (init, combine, typ) =>
+        val newCombine =
+          q"""($tmpAcc: $typ, $tmpElem: $ftyp) =>
+            $combine($tmpAcc, $f($tmpElem))
+          """
+        rec(init, c.typecheck(newCombine) ,typ)
+      }
+      (k, d)
+
+    case q"$_.repF[$d]($a)" =>
+      val k: FoldGrammar = { (init, combine, typ) =>
+        q"$a foldLeft[$typ]($init, $combine)"
+      }
+      (k, d)
   }
 }
