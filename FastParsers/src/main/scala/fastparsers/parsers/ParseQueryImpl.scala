@@ -44,7 +44,7 @@ trait BaseParseQueryImpl extends ParseQueryImplBase { self: BaseParsersImpl =>
    */
   override def transform(tree: c.Tree): c.Tree = unwrap(tree) match {
     case q"$foo map[$t] $f" =>
-      transformMap(foo, f)
+      transformMap(foo, f, t)
     case t =>
       println("Any match in `transform`")
       println(show(t))
@@ -64,11 +64,9 @@ trait BaseParseQueryImpl extends ParseQueryImplBase { self: BaseParsersImpl =>
     }
   }
 
-  private def transformMap(parser: c.Tree, f: c.Tree): c.Tree = {
+  private def transformMap(parser: c.Tree, f: c.Tree, typ: c.Tree): c.Tree = {
     unwrap(parser) match {
       case q"$_.rep[$d]($a, $min, $max)" =>
-        println("matched on a repetition")
-        println()
 
         f match {
           case q"($arg => $body)" =>
@@ -81,7 +79,7 @@ trait BaseParseQueryImpl extends ParseQueryImplBase { self: BaseParsersImpl =>
                 println(show(d2))
                 println(show(z))
                 println()
-                val myTree = q"$a foldLeft[$d2]($z, $comb)"
+                val myTree = q"$a.foldLeft[$d2]($z, $comb)"
 
                 println("the transform is")
                 println(show(myTree))
@@ -93,7 +91,7 @@ trait BaseParseQueryImpl extends ParseQueryImplBase { self: BaseParsersImpl =>
                 println("not matching sel syntax")
                 println(show(body))
                 println()
-                q"${transform(parser)} map $f"
+                q"${transform(parser)} map[$typ] $f"
             }
         }
 
@@ -115,7 +113,7 @@ trait BaseParseQueryImpl extends ParseQueryImplBase { self: BaseParsersImpl =>
         println(show(unwrapped))
         println()
 
-        q"${transform(parser)} map $f"
+        q"${transform(parser)} map[$typ] $f"
     }
   }
 
