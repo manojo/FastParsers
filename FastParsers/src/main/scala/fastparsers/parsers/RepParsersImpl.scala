@@ -24,6 +24,7 @@ trait RepParsersImpl extends ParserImplBase { self: ParseInput with ParseError =
     case q"$a foldRight[$d,$ptype]($init,$f)"     => parseFoldRight(a, init, f, d, ptype, rs)
     case q"$a reduceLeft[$d]($f)"                 => parseReduceLeft(a, f, d, rs)
     case q"$a reduceRight[$d]($f)"                => parseReduceRight(a, f, d, rs)
+    case q"$prefix.fold[$d2]($init, $f)"          => expand(expandFoldGrammar(prefix, d2, init, f), rs)
     case _                                        => super.expand(tree, rs)
   }
 
@@ -307,4 +308,36 @@ trait RepParsersImpl extends ParserImplBase { self: ParseInput with ParseError =
     }
   }
 
+
+  /**
+   * We desugar parsers of the form repF(a).pipeline.fold[typ](init, f)
+   * `prefix` corresponds to `repF(a).pipeline`
+   * expandFoldGrammar(prefix, d2, init, f)
+   */
+  private def expandFoldGrammar(
+      prefix: c.Tree,
+      typ: c.Tree,
+      init: c.Tree,
+      f: c.Tree): c.Tree = {
+
+    val fGrammar = buildFoldGrammar(prefix)
+    fGrammar(init, f, typ)
+  }
+
+  /**
+   * build an instance of a `FoldGrammar`
+   */
+
+  /**
+   * takes an init, a combine, a type, and gives a new tree
+   */
+  type FoldGrammar = (c.Tree, c.Tree, c.Tree) => c.Tree
+
+  private def buildFoldGrammar(prefix: c.Tree): FoldGrammar = prefix match {
+
+    case q"$_.repF[$d]($a)" => { (init, combine, typ) =>
+      q"$a foldLeft[$typ]($init, $combine)"
+    }
+
+  }
 }

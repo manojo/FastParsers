@@ -79,13 +79,12 @@ trait BaseParseQueryImpl extends ParseQueryImplBase { self: BaseParsersImpl =>
                 println(show(d2))
                 println(show(z))
                 println()
-                val myTree = q"$a.foldLeft[$d2]($z, $comb)"
+                val myTree = c.typecheck(q"repF($a).fold[$d2]($z, $comb)")
 
                 println("the transform is")
                 println(show(myTree))
                 println()
                 myTree
-
 
               case _ =>
                 println("not matching sel syntax")
