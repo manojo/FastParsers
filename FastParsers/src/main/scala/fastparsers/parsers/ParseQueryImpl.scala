@@ -10,13 +10,38 @@ import scala.collection.mutable.ListBuffer
  * trait that we mix in to whatever parsers we want to transform
  */
 trait ParseQueryImplBase { self: ParserImplBase  =>
+  import c.universe._
+
+  def unwrap(parser: c.Tree): c.Tree = {
+    parser match {
+      case q"$_.baseParsers[$t]($inner)" =>
+        /*println("unwrapping..." + show(inner));*/ inner
+      case q"compound[$t]($inner)"  =>
+        /*println("unwrapping2..." + show(inner));*/ inner
+      case q"$_.compound[$t]($inner)"  =>
+        /*println("unwrapping3..." + show(inner));*/ inner
+      case _ => parser
+    }
+  }
 
   /**
    * The function that transforms the trees according to the
    * transformation rule.
    * In this super trait the transformation is the identity
    */
-  def transform(tree: c.Tree): c.Tree = tree
+  def transform(tree: c.Tree): c.Tree = unwrap(tree) match {
+    case q"$foo map[$t] $f" =>
+      transformMap(foo, f, t)
+
+    case _ =>
+      println("Any match in `transform`")
+      println(show(tree))
+      println()
+      tree
+  }
+
+  def transformMap(parser: c.Tree, f: c.Tree, typ: c.Tree): c.Tree =
+    q"${transform(parser)} map[$typ] $f"
 }
 
 /**
@@ -42,58 +67,9 @@ trait BaseParseQueryImpl extends ParseQueryImplBase { self: BaseParsersImpl =>
    *   - Map_Map over Parser
    *     T[[ T[[ p map f map g ]]  =  T[[ p ]] map (f andThen g) ]]
    */
-  override def transform(tree: c.Tree): c.Tree = unwrap(tree) match {
-    case q"$foo map[$t] $f" =>
-      transformMap(foo, f, t)
-    case t =>
-      println("Any match in `transform`")
-      println(show(t))
-      println()
-      super.transform(tree)
-  }
 
-  private def unwrap(parser: c.Tree): c.Tree = {
-    parser match {
-      case q"$_.baseParsers[$t]($inner)" =>
-        /*println("unwrapping..." + show(inner));*/ inner
-      case q"compound[$t]($inner)"  =>
-        /*println("unwrapping2..." + show(inner));*/ inner
-      case q"$_.compound[$t]($inner)"  =>
-        /*println("unwrapping3..." + show(inner));*/ inner
-      case _ => parser
-    }
-  }
-
-  private def transformMap(parser: c.Tree, f: c.Tree, typ: c.Tree): c.Tree = {
+  override def transformMap(parser: c.Tree, f: c.Tree, typ: c.Tree): c.Tree = {
     unwrap(parser) match {
-      case q"$_.rep[$d]($a, $min, $max)" =>
-
-        f match {
-          case q"($arg => $body)" =>
-            println("matching function")
-            println()
-
-            body match {
-              case q"$_.foldLeft[$d2]($z)($comb)" =>
-                println("matching function application syntax")
-                println(show(d2))
-                println(show(z))
-                println()
-                val myTree = c.typecheck(q"repF($a).fold[$d2]($z, $comb)")
-
-                println("the transform is")
-                println(show(myTree))
-                println()
-                myTree
-
-              case _ =>
-                println("not matching sel syntax")
-                println(show(body))
-                println()
-                q"${transform(parser)} map[$typ] $f"
-            }
-        }
-
       case q"$_.baseParsers[$_]($a) ~[$_] $b" =>
         println("It DID match on `transformMap`")
         println(s"Show: ${show(f)}")
@@ -111,8 +87,7 @@ trait BaseParseQueryImpl extends ParseQueryImplBase { self: BaseParsersImpl =>
         println("It didn't match on `transformMap`")
         println(show(unwrapped))
         println()
-
-        q"${transform(parser)} map[$typ] $f"
+        super.transformMap(parser, f, typ)
     }
   }
 
@@ -248,7 +223,7 @@ trait BaseParseQueryImpl extends ParseQueryImplBase { self: BaseParsersImpl =>
  * responsible for transforming rep parsers
  */
 trait RepParseQueryImpl extends ParseQueryImplBase { self: RepParsersImpl =>
-
+  import c.universe._
   /**
    * The following rules apply:
    *
