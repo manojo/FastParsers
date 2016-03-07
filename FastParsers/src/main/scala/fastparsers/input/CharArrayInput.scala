@@ -9,5 +9,6 @@ trait CharArrayInput extends StringLikeInput {
   def inputType = typeOf[Array[Char]]
   override def inputWindowType: c.Type = typeOf[fastparsers.input.InputWindow.CharArrayStruct]
 
-  override def getInputWindow(start: c.Tree, end: c.Tree): c.Tree = q"new fastparsers.input.InputWindow.CharArrayStruct($inputValue, $start, $end)"
+  override def getInputWindow(start: c.Tree, end: c.Tree): c.Tree =
+    q"new fastparsers.input.InputWindow.CharArrayStruct($inputValue, $start, $end)"
 }
