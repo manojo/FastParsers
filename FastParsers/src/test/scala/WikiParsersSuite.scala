@@ -549,10 +549,8 @@ class WikiParsersSuite extends FunSuite {
     val charSeq = new FastCharSequence(fileArray)
 
     parser.fullParser(file, 0) match {
-      case Success(result) => println("success kid")
+      case Success(result) => println("success kid ")
       case f @ Failure(msg) => fail("error : " + f)
     }
-
-
   }
 }

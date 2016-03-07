@@ -10,5 +10,6 @@ trait StringInput extends StringLikeInput {
 
   override def inputWindowType: c.Type = typeOf[fastparsers.input.InputWindow.StringStruct]
 
-  override def getInputWindow(start: c.Tree, end: c.Tree): c.Tree = q"new fastparsers.input.InputWindow.StringStruct($inputValue, $start, $end)"
+  override def getInputWindow(start: c.Tree, end: c.Tree): c.Tree =
+    q"new fastparsers.input.InputWindow.StringStruct($inputValue, $start, $end)"
 }
