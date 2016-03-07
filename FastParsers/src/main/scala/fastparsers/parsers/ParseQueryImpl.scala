@@ -14,24 +14,13 @@ import scala.collection.mutable.ListBuffer
 trait ParseQueryImplBase { self: ParserImplBase  =>
   import c.universe._
 
-  def unwrap(parser: c.Tree): c.Tree = {
-    parser match {
-      case q"$_.baseParsers[$t]($inner)" =>
-        /*println("unwrapping..." + show(inner));*/ inner
-      case q"compound[$t]($inner)"  =>
-        /*println("unwrapping2..." + show(inner));*/ inner
-      case q"$_.compound[$t]($inner)"  =>
-        /*println("unwrapping3..." + show(inner));*/ inner
-      case _ => parser
-    }
-  }
 
   /**
    * The function that transforms the trees according to the
    * transformation rule.
    * In this super trait the transformation is the identity
    */
-  def transform(tree: c.Tree): c.Tree = unwrap(tree) match {
+  def transform(tree: c.Tree): c.Tree = tree match {
     case q"$foo map[$t] $f" =>
       transformMap(foo, f, t)
 
@@ -353,6 +342,18 @@ trait RepParseQueryImpl extends ParseQueryImplBase { self: RepParsersImpl =>
   override def transform(tree: c.Tree): c.Tree = tree match {
     //@TODO write transformations here!
     case _ => super.transform(tree)
+  }
+
+  def unwrap(parser: c.Tree): c.Tree = {
+    parser match {
+      case q"$_.baseParsers[$t]($inner)" =>
+        /*println("unwrapping..." + show(inner));*/ inner
+      case q"compound[$t]($inner)"  =>
+        /*println("unwrapping2..." + show(inner));*/ inner
+      case q"$_.compound[$t]($inner)"  =>
+        /*println("unwrapping3..." + show(inner));*/ inner
+      case _ => parser
+    }
   }
 
   override def transformMap(parser: c.Tree, f: c.Tree, typ: c.Tree): c.Tree = {
