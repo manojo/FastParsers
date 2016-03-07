@@ -40,7 +40,8 @@ object FastParsersBuild extends Build {
         "org.scalatest" %% "scalatest" % "3.0.0-M15" % "test",
         "org.scalacheck" %% "scalacheck" % "1.11.5" % "test",
         "com.storm-enroute" % "scalameter_2.11" % "0.6" % "test",
-        "com.lihaoyi" %% "pprint" % "0.3.8"
+        "com.lihaoyi" %% "pprint" % "0.3.8",
+        "com.lihaoyi" %% "fastparse" % "0.3.4"
       ),
 
   		testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
