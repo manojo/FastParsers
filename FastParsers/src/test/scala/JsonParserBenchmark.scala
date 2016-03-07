@@ -38,14 +38,17 @@ object JsonParserBenchmark extends PerformanceTest {
   val vbigFileArray = vbigFile.toCharArray
   val vbigFileSeq = new FastCharSequence(vbigFileArray)
 
+  val fastparse.all.Parsed.Success(resAll, _) = FastParseJSON.jsonExpr.parse(bigFile)
+/*
+  performance of "JsonParser on small inputs" in {
 
-  /*performance of "JsonParser on small inputs" in {
     measure method "FastParsers" in {
       using(range) in { j =>
         for (i <- 1 to j; m <- files)
           JSonImplBoxed.jsonparser.value(m)
       }
     }
+
     measure method "LMS (gen2)" in {
       using(range) in { j =>
         for (i <- 1 to j; m <- files)
@@ -59,21 +62,28 @@ object JsonParserBenchmark extends PerformanceTest {
           JSON.parse(JSON.value,new FastCharSequence(m))
       }
     }*/
-  }*/
+  }
+*/
 
-
- /* performance of "JsonParser on a big input" in {
+  performance of "JsonParser on a big input" in {
     measure method "FastParsers" in {
       using(range) in { j =>
         for (i <- 1 to j)
           JSonImplBoxed.jsonparser.value(bigFileArray)
       }
     }
- 
+
     measure method "LMS (gen2)" in {
       using(range) in { j =>
         for (i <- 1 to j)
           LMSJsonParserGen2.apply(bigFileArray)
+      }
+    }
+
+    measure method "FastParse (Haoyi)" in {
+      using(range) in { j =>
+        for (i <- 1 to j)
+          FastParseJSON.jsonExpr.parse(bigFile)
       }
     }
 
@@ -84,21 +94,14 @@ object JsonParserBenchmark extends PerformanceTest {
       }
     }*/
 
-  }*/
+  }
 
 
-  /*performance of "JsonParser on a very big input" in {
+  performance of "JsonParser on a very big input" in {
     measure method "FastParsers" in {
       using(range) in { j =>
         for (i <- 1 to j)
           JSonImpl2.jsonparser.value(vbigFileArray)
-      }
-    }
-
-    measure method "Combinators" in {
-      using(range) in { j =>
-        for (i <- 1 to j)
-          JSON.parse(JSON.value,vbigFileSeq)
       }
     }
 
@@ -108,18 +111,34 @@ object JsonParserBenchmark extends PerformanceTest {
           LMSJsonParserGen2.apply(vbigFileArray)
       }
     }
-  }*/
 
+    measure method "FastParse (Haoyi)" in {
+      using(range) in { j =>
+        for (i <- 1 to j; m <- files)
+          FastParseJSON.jsonExpr.parse(vbigFile)
+      }
+    }
 
+    /*
+    measure method "Combinators" in {
+      using(range) in { j =>
+        for (i <- 1 to j)
+          JSON.parse(JSON.value,vbigFileSeq)
+      }
+    }
+    */
+  }
+
+/*
   performance of "Different JSonParser implementations" in {
-    /*measure method "FastParsers" in {
+    measure method "FastParsers" in {
       using(range) in { j =>
         for (i <- 1 to j)
           JSonImpl2.jsonparser.value(bigFileArray)
       }
-    }*/
+    }
 
-    /*measure method "FastParsers Boxed" in {
+    measure method "FastParsers Boxed" in {
       using(range) in { j =>
         for (i <- 1 to j)
           JSonImplBoxed.jsonparser.value(vbigFileArray)
@@ -144,7 +163,7 @@ object JsonParserBenchmark extends PerformanceTest {
         for (i <- 1 to j)
           JSonImpl5.jsonparser.value(vbigFileArray)
       }
-    }*/
+    }
 
     /*measure method "FastParsers InputWindow to String" in {
       using(range) in { j =>
@@ -175,5 +194,5 @@ object JsonParserBenchmark extends PerformanceTest {
     }*/
 
   }
-
+*/
 }
