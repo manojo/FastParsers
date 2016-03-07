@@ -15,7 +15,7 @@ trait BaseParsersImpl extends ParserImplBase {
   override def expand(tree: c.Tree, rs: ResultsStruct) = tree match {
     case q"$_.baseParsers[$d]($a)" => expand(a, rs)
     case q"$_.toElem(($a,$b))"     => parseRange(a, b, rs)
-    case q"$_.toElem($elem)"       => expand(q"_.acceptIf(_ == $elem)", rs)
+    case q"$_.toElem($elem)"       => parseElem(elem, rs)
     case q"$_.elemParser($elem)"   => parseElem(elem, rs)
     case q"$_.range($a,$b)"        => parseRange(a, b, rs)
     case q"$_.accept(..$a)"        => parseAccept(a,negate = false,rs)

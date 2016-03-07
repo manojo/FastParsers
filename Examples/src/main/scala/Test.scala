@@ -31,9 +31,12 @@ object Test {
   val parserPre = {
     import FastPrinters._
     val parser = FastParser {
+      def digit2Int: Parser[Int] = acceptIf(isDigit) map { c =>
+        (c - '0').toInt
+      }
       def test = acceptIf(isDigit) ~ acceptIf(isDigit)
-      def test2 = test map {
-        case a ~ b => (a - '0', b - '0')
+      def test2: Parser[Int] = rep(digit2Int) map {
+        ls => ls.foldLeft[Int](0)((acc, x) => acc * 10 + x)
       }
     }
     parser
@@ -42,9 +45,17 @@ object Test {
   val parserPost = {
     import TransformedPrinters._
     val parser = FastParser {
-      def test2 = acceptIf(isDigit) ~ acceptIf(isDigit) map {
-        case a ~ b => (a - '0', b - '0')
+      //def test2 = acceptIf(isDigit) ~ acceptIf(isDigit) map {
+      //  case a ~ b => (a - '0', b - '0')
+      //}
+      def digit2Int: Parser[Int] = acceptIf(isDigit) map { c =>
+        (c - '0').toInt
       }
+
+      def test2: Parser[Int] = rep(digit2Int) map {
+        ls => ls.foldLeft[Int](0)((acc, x) => acc * 10 + x)
+      }
+
     }
     parser
   }

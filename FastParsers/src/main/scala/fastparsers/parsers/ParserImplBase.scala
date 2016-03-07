@@ -190,7 +190,10 @@ trait ParserImplBase { self: ParseInput with ParseError =>
    * Prints a combinator in a readable way
    * @param tree Code containing the combinator to print
    */
-  def prettyPrint(tree: c.Tree): String = "?" //TODO change ?
+  def prettyPrint(tree: c.Tree): String = {
+    s""" Couldn't match nothing y'all! Showing tree as is:
+      ${show(tree)}""" //TODO change ?
+  }
 }
 
 trait IgnoreResultsPolicy extends ParserImplBase { self: ParseInput with ParseError =>
