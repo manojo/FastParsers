@@ -5,6 +5,8 @@ import fastparsers.input._
 
 import scala.collection.mutable.ListBuffer
 
+import scala.collection.mutable.ListBuffer
+
 /**
  * Since it is all a big cake pattern we need to have a `ParseQueryImplBase`
  * trait that we mix in to whatever parsers we want to transform
@@ -45,10 +47,12 @@ trait ParseQueryImplBase { self: ParserImplBase  =>
 }
 
 /**
- * responsible for transforming base parsers
+ * Responsible for transforming base parsers
  */
-trait BaseParseQueryImpl extends ParseQueryImplBase { self: BaseParsersImpl =>
-  import c.universe._
+trait BaseParseQueryImpl extends ParseQueryImplBase with Traversers {
+  self: BaseParsersImpl =>
+
+  import c.universe._, c.internal._, decorators._
 
   /**
    *  The following rules apply
@@ -67,156 +71,258 @@ trait BaseParseQueryImpl extends ParseQueryImplBase { self: BaseParsersImpl =>
    *   - Map_Map over Parser
    *     T[[ T[[ p map f map g ]]  =  T[[ p ]] map (f andThen g) ]]
    */
+  override def transform(tree: c.Tree): c.Tree = tree match {
+    case topExpression @ q"$parser map[$t] $f" =>
+      (rewriteMapOnParsers(parser, f) map {
+        (t: (c.Tree, c.Tree, TransformInfo)) =>
+          val (newMatchCase, parsers, info) = t
+          val finalRes = q"$parsers map[(Int, Int)] $newMatchCase"
+          log("Final result", show(finalRes))
+          c.typecheck(finalRes)
+      }).getOrElse(topExpression)
+    case t =>
+      println("Any match in `transform`")
+      println(show(t))
+      super.transform(tree)
+  }
 
-  override def transformMap(parser: c.Tree, f: c.Tree, typ: c.Tree): c.Tree = {
-    unwrap(parser) match {
-      case q"$_.baseParsers[$_]($a) ~[$_] $b" =>
-        println("It DID match on `transformMap`")
-        println(s"Show: ${show(f)}")
-        println()
+  type FinalRes = Option[(c.Tree, c.Tree, TransformInfo)]
 
-        /*a match {
-          case q"$f($s)" => matchCase(s)
-          case _ =>
-            println("FAILED before matchcase")
-            a
-        }*/
-        matchCase(f)
-
-      case unwrapped =>
-        println("It didn't match on `transformMap`")
-        println(show(unwrapped))
-        println()
-        super.transformMap(parser, f, typ)
+  private def unwrap(parser: c.Tree)(f: c.Tree => FinalRes): FinalRes = {
+    parser match {
+      case q"$p.baseParsers[$t]($inner)" =>
+        f(inner) map {
+          (t: (c.Tree, c.Tree, TransformInfo)) =>
+            val (newMatchCase, mappedParsers, info) = t
+            val res = c.typecheck(q"$p.baseParsers[(Int, Int)]($mappedParsers)")
+            (newMatchCase, res, info)
+        }
+      case _ =>
+        abort("Could not unwrap parser")
     }
   }
 
-  private def matchCase(m: c.Tree): c.Tree = {
+  private def rewriteMapOnParsers(parser: c.Tree, f: c.Tree): FinalRes = {
+    unwrap(parser) {
+      case q @ q"$p.baseParsers[$t]($a) ~[$_] $b" =>
+        identifyMatchCase(f) map {
+          (t: (c.Tree, TransformInfo)) =>
+            val (newMatchCase, info) = t
+            info.fs match {
+              case List(first, second) =>
+                val parser1 = c.typecheck(q"$a map[Int] $first")
+                val parser2 = c.typecheck(q"$b map[Int] $second")
+                (newMatchCase, c.typecheck(q"$parser1 ~[Int] $parser2"), info)
+              case _ =>
+                abort("We haven't still generalized this part")
+            }
+        }
+
+      case x =>
+        println(showRaw(x))
+        abort("It didn't match on `rewriteMapOnParsers`")
+    }
+  }
+
+  private def identifyMatchCase(m: c.Tree): Option[(c.Tree, TransformInfo)] = {
     m match {
-        /*
-      case q"$c match { case ..$cases }" =>
-        println("YEAH")
-        println(show(cases))
-        m
-      case q"{ case ..$cases }" =>
-        println("YEAH2")
-        println(show(cases))
-        m
-      case q"$_ match { case ..$cases }" =>
-        println("YEAH3")
-        println(show(cases))
-        m
-      case q"$b match { case ..$cases }" =>
-        println("YEAH4")
-        println(show(cases))
-        println(show(b))
-        b
-      case q"($x: $t) => $body" =>
-        println("YEAH4")
-        println(show(x))
-        println(show(body))
-        body
-        */
       case q"($x => $x2 match { case ..$cases })" =>
-        println("YEAH5")
-        println(show(x))
-        println(show(cases))
-        processCases(cases)
-      case _ => println("FAIL"); println(show(m)); m
+        if (cases.size != 1) None
+        else {
+          val (rewrittenCase, info) = rewriteCase(cases.head)
+          val newCase = List(rewrittenCase)
+          val f = q"((x: ${info.resultType}) => x match { case ..$newCase })"
+          Some((f, info))
+        }
+      case _ =>
+        error(show(m))
+        abort("Couldn't find match function")
     }
   }
 
-  private def processCases(cs: List[c.Tree]): c.Tree = cs.head match {
-    case cq"$pat => $body" =>
-      println("SHOOT3")
-      println(show(pat))
-      println(show(body))
-      println(showRaw(body))
-      body
-    case _ =>
-      println("SHOOT-fail")
-      cs.head
+  case class TransformInfo(
+    fs: List[c.Tree],
+    resultTypes: List[Type],
+    resultType: c.Tree
+  )
+
+  private def rewriteCase(cs: Tree): (Tree, TransformInfo) =
+    cs match {
+      case cse @ cq"$pattern => $body" =>
+        val usedSymbols = (new UsedVariablesInPattern).inspect(pattern)
+        val funs = (new TransformLogic(usedSymbols)).replicate(body)
+
+        val q"$prefix[..$targs](..$args)" = body
+
+        val resultTypes: List[Type] = funs map {
+          (f: c.Tree) =>
+            val q"($header => $body)" = f
+            body.tpe.finalResultType
+        }
+
+        val seedResult = tq"(${resultTypes.head}, ${resultTypes.tail.head})"
+        val resultType = resultTypes.tail.tail.foldLeft(seedResult){
+          (t: Tree, tp: Type) =>
+            tq"($t, $tp)"
+        }
+
+        val newVariables: List[TermSymbol] = resultTypes map {
+          (t: Type) =>
+            val newName = c.freshName("temp")
+            setInfo(enclosingOwner.newTermSymbol(newName), t)
+        }
+
+        val names = newVariables.map(_.name)
+        val seed = pq"(${names.head}, ${names.tail.head})"
+        val newPattern = names.tail.tail.foldLeft(seed) {
+          (t: c.Tree, tn: TermName) =>
+            pq"($t, $tn)"
+        }
+
+        val newBody = q"$prefix[..$resultTypes](..$names)"
+        val caseClause = cq"$newPattern => $newBody"
+        val info = TransformInfo(funs, resultTypes, resultType)
+        (caseClause, info)
+
+      case _ =>
+        abort("Failed to identify pattern and body in case clause")
+    }
+
+
+  class TransformLogic(val symbols: List[Symbol]) {
+    def replicate(tree: c.Tree): List[c.Tree] = tree match {
+      case a @ Apply(typeApply, elems) =>
+        val res = elems.foldLeft[Option[List[c.Tree]]](Some(List())) {
+          (acc: Option[List[c.Tree]], elem: c.Tree) =>
+            elem match {
+              case q"$f(..$fargs)" =>
+
+                val leftVariable = lookUpInFunctionSelect(f)
+                log("Symbol on the left", leftVariable.toString)
+
+                val rightVariables = fargs.foldLeft(List.empty[Symbol]) {
+                  (acc, t) => acc ++ lookUpFunctionParameters(t)
+                }
+                log("Symbols on the right", rightVariables.toString)
+
+                /* Optimize only if there is only one reference to
+                 * `TermName`s representing the variables on which
+                 * we pattern match. Otherwise, returned the original tree. */
+                acc map { ls =>
+                  (leftVariable, rightVariables) match {
+                    case (Some(left), Nil) =>
+                      createAnonFunction(elem, left) :: ls
+                    case (Some(left), xs) => Nil
+                    case (None, List(right)) =>
+                      createAnonFunction(elem, right) :: ls
+                    case (None, Nil) => Nil
+                  }
+                }
+              case x =>
+                abort(s"Couldn't find UnApply but ${showRaw(x)}")
+            }
+        }
+        log("Result of `genFunctionsFromLogic`", showRaw(res))
+        res.getOrElse(Nil).reverse
+    }
+
+    def lookUpInFunctionSelect(s: c.Tree): Option[Symbol] = {
+      s match {
+        case Select(i @ Ident(tn), _)
+          if symbols.contains(i.symbol) => Some(i.symbol)
+        case _ => None
+      }
+    }
+
+    def lookUpFunctionParameters(s: c.Tree): List[Symbol] =
+      new UsedRefIdent(symbols).getReferences(s)
+
+    def createAnonFunction(body: c.Tree, old: Symbol): c.Tree = {
+      val temp = c.freshName("temp")
+      val oldType = old.typeSignature
+      val tempSym = setInfo(enclosingOwner.newTermSymbol(temp), oldType)
+      val tempDef = valDef(tempSym)
+
+      val renamedBody = typingTransform(body)((tree, api) => tree match {
+        case i @ Ident(n) if i.symbol == old =>
+          api.typecheck(q"$tempSym")
+        case x =>
+          api.default(tree)
+      })
+
+      val newBody = changeOwner(renamedBody, old.owner, enclosingOwner)
+      c.typecheck(q"($tempDef => $newBody)")
+    }
   }
 
-  /** Inspect a function and tell us information about its inner
-    * details, like which variables are used and which are not.
-    *
-    * Use the whitebox context because `FastParsers` use it by default.
-    */
-  class Inspector {
-    import c.universe._
-
-    def getUsedVars(f: Tree): List[Symbol] = {
-      val pc = new ParamCollector
-      pc.traverse(f)
-      val upc = new UsedParamsCollector(pc.params)
-      upc.traverse(f)
-      upc.usedVariables.toList
-    }
-
-    class UsedParamsCollector(params: ListBuffer[Symbol]) extends Traverser {
-
-      private[Inspector] val usedVariables = ListBuffer[Symbol]()
-
-      def isUsed(s: Symbol): Boolean =
-        s.isParameter && params.contains(s)
-
-      def isNotStored(s: Symbol): Boolean =
-        !usedVariables.contains(s)
-
-      override def traverse(tree: Tree) = tree match {
-        case i @ Ident(_) =>
-          val sym = i.symbol
-          if(isUsed(sym) && isNotStored(sym))
-            usedVariables += sym
-
-        // Ignore var references in match clause
-        case m @ Match(_, caseDefs) =>
-          caseDefs.map(traverse)
-
-        // Ignore var references in if expr
-        case i @ If(_, ifTrue, ifFalse) =>
-          traverse(ifTrue)
-          traverse(ifFalse)
-
-        case _ =>
-          super.traverse(tree)
-      }
-    }
-
-    class BindVariableCollector extends Traverser {
-
-      private[Inspector] val termNames = ListBuffer[TermName]()
-
-      override def traverse(tree: Tree) = tree match {
-        case d @ Bind(n, _) =>
-          val tn = n.toTermName
-          if(!termNames.contains(tn)) {
-            termNames += tn
-          }
-        case _ =>
-          println("invalid expression, couldn't find bind")
-      }
-
-    }
-
-
-    class ParamCollector extends Traverser {
-
-      private[Inspector] val params = ListBuffer[Symbol]()
-
-      override def traverse(tree: Tree) = tree match {
-        case vd @ ValDef(mods, name, tpt, rhs) =>
-          params += vd.symbol
-          traverse(rhs)
-        case _ =>
-          super.traverse(tree)
-      }
-
-    }
+  def log(what: String, msg: String): Unit = {
+    println(s"=========== $what ===========")
+    println(s"$msg")
   }
+
+  def error(msg: String): Unit = {
+    println(s"=========== ERROR ===========")
+    println(s"$msg")
+  }
+
+  def abort(msg: String) =
+    c.abort(c.enclosingPosition, msg)
+
 }
 
+trait Traversers {
+  self: BaseParsersImpl with ParseQueryImplBase=>
+  import c.universe._
+
+  /** Inspect a pattern and gives us the names of the
+    * variable on which we are pattern matching. */
+  class UsedVariablesInPattern extends Traverser {
+
+    private val usedSymbols = ListBuffer[Symbol]()
+
+    def inspect(tree: c.Tree): List[Symbol] = {
+      traverse(tree)
+      usedSymbols.toList
+    }
+
+    override def traverse(tree: c.Tree) = tree match {
+      case u @ UnApply(_, args) =>
+        args map {
+          case d @ Bind(n, _) =>
+            val sym = d.symbol
+            if(!usedSymbols.contains(sym)) {
+              usedSymbols += sym
+            }
+          case x =>
+            c.abort(c.enclosingPosition,
+              s"invalid expression, couldn't find Bind but ${showRaw(x)}")
+        }
+      case x =>
+        c.abort(c.enclosingPosition,
+          s"invalid expression, couldn't find UnApply but ${showRaw(x)}")
+    }
+  }
+
+  /** Inspect all the references to `Ident`, that is, any reference
+    * to an existing variable in scope and return them. */
+  class UsedRefIdent(symbols: List[Symbol]) extends Traverser {
+
+    def getReferences(s: c.Tree): List[Symbol] = {
+      val collector = new UsedRefIdent(symbols)
+      collector.traverse(s)
+      collector.collectedTermNames.toList
+    }
+
+    val collectedTermNames = ListBuffer[Symbol]()
+
+    override def traverse(tree: c.Tree) = tree match {
+      case i @ Ident(_) if symbols.contains(i.symbol) =>
+        collectedTermNames += i.symbol
+      case _ => super.traverse(tree)
+    }
+  }
+
+}
 
 
 /**

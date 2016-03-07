@@ -60,7 +60,7 @@ object Test {
     parser
   }
 
- def main(args: Array[String])  {
+ def main(args: Array[String]): Unit = {
 
 
   println("===============BEFORE============")
