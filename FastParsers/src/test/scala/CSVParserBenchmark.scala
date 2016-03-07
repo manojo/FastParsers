@@ -134,7 +134,7 @@ object CSVParserBenchmark extends PerformanceTest {
   }
 
   def benchStringLits = {
-    val bigStringLitFileName = "FastParsers/src/test/resources/" + "csvStringLits.txt"
+    val bigStringLitFileName = "FastParsers/src/test/resources/micro/" + "stringlits.txt"
     val bigStringLitFile = scala.io.Source.fromFile(bigStringLitFileName).getLines mkString "\n"
     val bigStringLitFileArray = bigStringLitFile.toCharArray
     val bigStringLitFileSeq = new FastCharSequence(bigStringLitFileArray)
