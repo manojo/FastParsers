@@ -55,6 +55,9 @@ trait BaseParsers[Elem, Input] {
   @compileTimeOnly("takeWhile can't be used outside FastParser")
   def takeWhile2(f: Elem => Boolean): Parser[InputWindow[Input]] = ???
 
+  @compileTimeOnly("takeWhile can't be used outside FastParser")
+  def takeWhile3(f: Elem => Boolean): Parser[InputWindow[Input]] = ???
+
   @compileTimeOnly("take can't be used outside FastParser")
   def take(n: Int): Parser[Input] = ???
 
@@ -86,6 +89,12 @@ trait BaseParsers[Elem, Input] {
   def callParam[T](p: String) : Parser[T] = ???
   def compound[T](p:Parser[T]): Parser[T] = ???
   def foreignCall[T](p: Any, ruleName: Any, params: Any*) = ???
+
+  @compileTimeOnly("can't be used outside FastParser")
+  def stringLitRec: Parser[Unit] = ???
+
+  @compileTimeOnly("can't be used outside FastParser")
+  def skipws: Parser[Unit] = ???
 
 
   @compileTimeOnly("positioned can't be used outside FastParser")

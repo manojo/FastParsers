@@ -25,6 +25,7 @@ trait BaseParsersImpl extends ParserImplBase {
     case q"$_.guard[$d]($a)"       => parseGuard(a, d, rs)
     case q"$_.takeWhile($f)"       => parseTakeWhile(f, rs)
     case q"$_.takeWhile2($f)"      => parseTakeWhile2(f, rs)
+    case q"$_.takeWhile3($f)"      => parseTakeWhile3(f, rs)
     case q"$_.take($n)"            => parseTake(n, rs)
     case q"$_.raw[$d]($a)"         => parseRaw(a,rs)
     case q"$_.phrase[$d]($a)"      => parsePhrase(a, rs)
@@ -207,6 +208,61 @@ trait BaseParsersImpl extends ParserImplBase {
       val $beginpos = $pos
       while ($isNEOI && $tmp_f($currentInput))
         $advance
+      ${rs.assignNew(getInputWindow(q"$beginpos", q"$pos"), inputWindowType)}
+      $success = true
+    """
+  }
+
+  /**
+   * Inlines the predicate function given as parameter.
+   */
+  private def parseTakeWhile3(f: c.Tree, rs: ResultsStruct) = {
+    import c.internal._, decorators._
+
+    val tmp_f = TermName(c.freshName)
+    val beginpos = TermName(c.freshName)
+
+    val tmppos = c.fresh(newTermName("temp"))
+    /**
+      * We are hardcoding the type of int for position at the moment.
+      * Should change this for generality
+      */
+    val tmpposSym = enclosingOwner.newTermSymbol(tmppos).setInfo(typeOf[Int])
+
+    /**
+     * currentInput comes from an enclosing scope and is a var
+     * we set tmpposVal to currentInput. We need to change owners
+     * etc. for preserving sanity at the compiler level
+     */
+    val tmpposVal = valDef(tmpposSym, c.internal.changeOwner(
+      q"$currentInput", enclosingOwner, tmpposSym))
+
+    val cont = TermName(c.freshName)
+    val q"($inlinee => $body)" = f
+
+    q"""
+      val $beginpos = $pos
+
+      var $cont = true
+      while ($cont) {
+        if ($isNEOI) {
+          $tmpposVal
+          val inlined = ${
+            c.internal.changeOwner(body, f.symbol, c.internal.enclosingOwner)
+            c.internal.typingTransform(body)((tree, api) => tree match {
+            case Ident(_)  =>
+              if (tree.symbol == inlinee.symbol){
+                api.typecheck(q"$tmpposSym")
+              } else {
+                api.default(tree)
+              }
+            case _ =>
+              api.default(tree)
+          })}
+          if (inlined) { $advance } else { $cont = false }
+        } else { $cont = false }
+      }
+
       ${rs.assignNew(getInputWindow(q"$beginpos", q"$pos"), inputWindowType)}
       $success = true
     """

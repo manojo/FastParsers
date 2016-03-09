@@ -7,7 +7,7 @@ object FastParsersBuild extends Build {
   def commonSettings = Seq(
     version := "0.1-SNAPSHOT",
 	  scalaVersion := "2.11.7" ,
-    //scalacOptions := Seq("-optimize"),
+    //scalacOptions := Seq("-optimize"), // <-- slows down compilation drastically
 	  libraryDependencies ++=  Seq(
 		  "org.scala-lang" % "scala-compiler"  % scalaVersion.value % "provided",
 		  "org.scala-lang" % "scala-reflect" % scalaVersion.value

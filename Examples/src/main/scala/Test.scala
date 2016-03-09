@@ -38,6 +38,8 @@ object Test {
       def test2: Parser[Int] = rep(digit2Int) map {
         ls => ls.foldLeft[Int](0)((acc, x) => acc * 10 + x)
       }
+
+      def myws = takeWhile2(x => x == ' ' || x == '\n')
     }
     parser
   }
@@ -62,12 +64,13 @@ object Test {
 
  def main(args: Array[String])  {
 
-
-  println("===============BEFORE============")
-  pprint.pprintln(parserPre.ruleMap("test2"))
-  println()
-  println("===============AFTER=============")
-  pprint.pprintln(parserPost.ruleMap("test2"))
+  println("bla")
+  pprint.pprintln(parserPre.ruleMap("myws"))
+  //println("===============BEFORE============")
+  //pprint.pprintln(parserPre.ruleMap("test2"))
+  //println()
+  //println("===============AFTER=============")
+  //pprint.pprintln(parserPost.ruleMap("test2"))
 
  }
 }

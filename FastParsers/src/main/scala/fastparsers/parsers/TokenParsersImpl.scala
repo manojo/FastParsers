@@ -7,7 +7,7 @@ import fastparsers.error.ParseError
  * Created by Eric on 22.04.14.
  * Implementation of TokenParsers
  */
-trait TokenParsersImpl extends ParserImplBase { self: StringLikeInput  with ParseError =>
+trait TokenParsersImpl extends ParserImplBase { self: StringLikeInput with ParseError =>
 
   import c.universe._
 
@@ -15,10 +15,12 @@ trait TokenParsersImpl extends ParserImplBase { self: StringLikeInput  with Pars
     case q"$_.lit($str)"     => parseLit(str, rs)
     case q"$_.ident"         => parseIdentifier(rs)
     case q"$_.stringLit"     => parseStringLit(rs)
+    case q"$_.stringLitRec"  => parseStringLitRec(rs)
     case q"$_.number"        => parseNumber(rs)
     case q"$_.decimalNumber" => parseDecimalNumber(rs)
     case q"$_.whitespaces"   => parseWhiteSpaces(rs)
-    case _                            => super.expand(tree, rs)
+    case q"$_.skipws"        => parseSkipWS(rs)
+    case _                   => super.expand(tree, rs)
   }
 
   override def prettyPrint(tree: c.Tree) = tree match {
@@ -28,7 +30,7 @@ trait TokenParsersImpl extends ParserImplBase { self: StringLikeInput  with Pars
     case q"$_.number"        => "number"
     case q"$_.decimalNumber" => "decimalNumber"
     case q"$_.whitespaces"   => "whitespaces"
-    case _                            => super.prettyPrint(tree)
+    case _                   => super.prettyPrint(tree)
   }
 
   private def skipWhiteSpace = {
@@ -122,6 +124,45 @@ trait TokenParsersImpl extends ParserImplBase { self: StringLikeInput  with Pars
     }
   }
 
+  /**
+   * Recognizes a string literal, does not even bother to
+   * construct any struct
+   */
+  private def parseStringLitRec(rs: ResultsStruct) = {
+    val beginpos = TermName(c.freshName)
+    mark { rollback =>
+     q"""
+      $skipWhiteSpace
+      val $beginpos = $pos
+      if ($isNEOI && $currentInput == '\"'){
+        $advance
+        while ($isNEOI && $currentInput != '\"'){
+          if ($currentInput == '\\'){
+            $advance
+          }
+          $advance
+        }
+
+        if ($isNEOI) {
+          $success = true
+          $advance
+          ${rs.assignNew(q"()", typeOf[Unit])}
+        }
+        else {
+          $success = false
+          ${pushError("expected '\"' got EOF", pos)}
+          $rollback
+        }
+      }
+      else {
+        $success = false
+        ${pushError("expected '\"' got EOF", pos)}
+        $rollback
+      }
+    """
+    }
+  }
+
 
   private def parseNumber(rs: ResultsStruct) = {
     val beginpos = TermName(c.freshName)
@@ -191,11 +232,18 @@ trait TokenParsersImpl extends ParserImplBase { self: StringLikeInput  with Pars
 
   private def parseWhiteSpaces(rs: ResultsStruct) = {
     val beginpos = TermName(c.freshName)
-    val result = TermName(c.freshName)
     q"""
       val $beginpos = $pos
       $skipWhiteSpace
       ${rs.assignNew(getInputWindow(q"$beginpos", q"$pos"), inputWindowType)}
+      $success = true
+    """
+  }
+
+  private def parseSkipWS(rs: ResultsStruct) = {
+    q"""
+      $skipWhiteSpace
+      ${rs.assignNew(q"()", typeOf[Unit])}
       $success = true
     """
   }
