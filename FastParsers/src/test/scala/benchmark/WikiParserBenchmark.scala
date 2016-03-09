@@ -1,8 +1,12 @@
+package benchmark
+
 import fastparsers.input.InputWindow
 import org.scalameter.api._
 import scala.collection.mutable.ListBuffer
 
 import InputWindow._
+import util.FastCharSequence
+import parsers.WikiParsers._
 
 object WikiParserBenchmark extends PerformanceTest {
 
@@ -29,9 +33,6 @@ object WikiParserBenchmark extends PerformanceTest {
   val vbigFile = scala.io.Source.fromFile(vbigFileName).getLines mkString "\n"
   val vbigFileArray = vbigFile.toCharArray
   val vbigFileSeq = new FastCharSequence(vbigFileArray)
-
-  val fullWikiParser = WikiParsers.fullWikiParser
-  val relevantWikiParser = WikiParsers.relevantWikiParser
 
   import fastparsers.framework.parseresult.{ParseResult, Success, Failure}
 
