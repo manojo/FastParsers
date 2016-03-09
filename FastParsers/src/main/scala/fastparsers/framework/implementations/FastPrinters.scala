@@ -4,7 +4,7 @@ import scala.language.experimental.macros
 import fastparsers.parsers._
 import scala.reflect.macros.whitebox.Context
 import fastparsers.framework.ruleprocessing.{
-  RulesInliner, RulesTransformer, RulePrinter, ParseQuery
+  RulesInliner, RulesTransformer, RulePrinter, ParseQuery, ParseRules
 }
 import fastparsers.input.StringInput
 import fastparsers.error.IgnoreParseError
@@ -34,6 +34,7 @@ class FastPrintersImpl(val c: Context)
     extends BaseImpl
     with RulesTransformer
     with RulesInliner
+    with ParseRules
     with BaseParsersImpl
     with RepParsersImpl
     with TokenParsersImpl
@@ -64,6 +65,7 @@ class TransformedPrintersImpl(val c: Context)
     extends BaseImpl
     with RulesTransformer
     with ParseQuery
+    with ParseRules
     with FullParseQueryImpl
     with BaseParsersImpl
     with RepParsersImpl
