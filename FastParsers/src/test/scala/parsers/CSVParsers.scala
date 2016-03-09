@@ -1,3 +1,5 @@
+package parsers
+
 import fastparsers.input.InputWindow._
 import scala.util.parsing.combinator._
 import scala.util.parsing.input._
@@ -54,9 +56,9 @@ object CSVParsers {
        */
 
       /* Mapping as early as possible */
-      def stringPair1: Parser[(String, String)] =
+      def stringPair1 =
         ((stringLit map (_.toString)) <~ (ws ~> ':' <~ ws)) ~ (stringLit map (_.toString))
-      def stringPairs1: Parser[List[(String, String)]] =
+      def stringPairs1 =
         (ws ~> '{' <~ ws) ~> repsep(stringPair1, ws ~> ',' <~ ws) <~ (ws ~> '}' <~ ws)
       def strAll1 = '[' ~> repsep(stringPairs1, ws ~> ',' <~ ws) <~ close
 
@@ -64,13 +66,13 @@ object CSVParsers {
       def stringPair2 = (stringLit ~ ((ws ~> ':' <~ ws) ~> stringLit)) map { case (a, b) =>
         (a.toString, b.toString)
       }
-      def stringPairs2: Parser[List[(String, String)]] =
+      def stringPairs2 =
         (ws ~> '{' <~ ws) ~> repsep(stringPair2, ws ~> ',' <~ ws) <~ (ws ~> '}' <~ ws)
       def strAll2 = '[' ~> repsep(stringPairs2, ws ~> ',' <~ ws) <~ close
 
       /* Map to string at very end */
       def stringPair3 = stringLit ~ ((ws ~> ':' <~ ws) ~> stringLit)
-      def stringPairs3: Parser[List[(String, String)]] =
+      def stringPairs3 =
         ((ws ~> '{' <~ ws) ~> repsep(stringPair3, ws ~> ',' <~ ws) <~ (ws ~> '}' <~ ws)) map { ls =>
           ls.map { case (a, b) => (a.toString, b.toString) }
         }
@@ -81,7 +83,16 @@ object CSVParsers {
       def stringPairs4 =
         ((ws ~> '{' <~ ws) ~> repsep(stringPair4, ws ~> ',' <~ ws) <~ (ws ~> '}' <~ ws))
 
-      def strAll4: Parser[List[List[String]]] = ('[' ~> repsep(stringPairs4, ws ~> ',' <~ ws) <~ close) map { ls =>
+      def strAll4 = ('[' ~> repsep(stringPairs4, ws ~> ',' <~ ws) <~ close) map { ls =>
+        ls map { ks => ks map { x => (x._1.toString, x._2.toString) } }
+      }
+
+      /* Project and map at very end */
+      def stringPair5 = stringLit ~ ((ws ~> ':' <~ ws) ~> stringLit)
+      def stringPairs5 =
+        ((ws ~> '{' <~ ws) ~> repsep(stringPair5, ws ~> ',' <~ ws) <~ (ws ~> '}' <~ ws))
+
+      def strAll5 = ('[' ~> repsep(stringPairs5, ws ~> ',' <~ ws) <~ close) map { ls =>
         ls map { ks => ks map (_._1.toString) }
       }
 		}
@@ -90,22 +101,25 @@ object CSVParsers {
   object CSVRecognizers {
   	import fastparsers.framework.implementations.FastParsersCharArray._
     import fastparsers.parsers.Parser
-		val csvParser = FastParsersCharArray {
+		/*fastparsers.framework.implementations.FastPrinters.FastParsers*/
+    val csvParser = FastParsersCharArray {
+
+      def ws = whitespaces
 
       /**
-       * not a ton of difference between this and ws that constructs a simple
-       * struct
+       * takeWhile and fold, both do not inline their functions,
+       * hence seem to suffer a performance hit.
        */
-      def recws: Parser[Unit] =
-        acceptIf(x => x == ' ' || x == '\n').foldLeft[Unit]((), (acc, elem) => ())
+      def recws = takeWhile2(x => x == ' ' || x == '\n')
+        //acceptIf(x => x == ' ' || x == '\n').foldLeft[Unit]((), (acc, elem) => ())
 
-      def recstrLit: Parser[Unit] = ('"' ~>
+      def recstrLit = ('"' ~>
         (acceptIf(x => x != '"').foldLeft[Unit]((), (acc, elem) => ()))
       <~ '"')
 
 			def primBools = ('t' ~ 'r' ~ 'u' ~ 'e') | ('f' ~ 'a' ~ 'l' ~'s' ~ 'e')
-			def bools = '[' ~> repsep(primBools, recws ~> ',' <~ recws) <~ close
-      def strings = '[' ~> repsep(stringLit, recws ~> ',' <~ recws) <~ close
+			def bools = '[' ~> repsep(primBools, ws ~> ',' <~ ws) <~ close
+      def strings = '[' ~> repsep(stringLit, ws ~> ',' <~ ws) <~ close
 
       /** seems like `recstrLit` is much worse than the primitive stringLit */
       //def strings = '[' ~> repsep(recstrLit, recws ~> ',' <~ recws) <~ close
@@ -113,36 +127,36 @@ object CSVParsers {
       /**
        * parsing structs, and then mapping at the end
        */
-      def stringsParsed: Parser[List[String]] =
-        ('[' ~> repsep(stringLit, recws ~> ',' <~ recws) <~ close) map {
+      def stringsParsed =
+        ('[' ~> repsep(stringLit, ws ~> ',' <~ ws) <~ close) map {
           ls => ls map (_.toString)
         }
 
       /**
        * key-value pairs, ignore both
        */
-      def stringPair1 = stringLit ~> (recws ~> ':' <~ recws) ~> stringLit
-      def stringPairs1 = (recws ~> '{' <~ recws) ~> repsep(stringPair1, recws ~> ',' <~ recws) <~ (recws ~> '}' <~ recws)
-      def strAll1 = '[' ~> repsep(stringPairs1, recws ~> ',' <~ recws) <~ close
+      def stringPair1 = stringLit ~> (ws ~> ':' <~ ws) ~> stringLit
+      def stringPairs1 = (ws ~> '{' <~ ws) ~> repsep(stringPair1, ws ~> ',' <~ ws) <~ (ws ~> '}' <~ ws)
+      def strAll1 = '[' ~> repsep(stringPairs1, ws ~> ',' <~ ws) <~ close
 
       /**
        * key-value pairs, ignore right, map now
        */
-      def stringPair2: Parser[String] =
-        (stringLit map (_.toString)) <~ ((recws ~> ':' <~ recws) <~ stringLit)
-      def stringPairs2 = (recws ~> '{' <~ recws) ~> repsep(stringPair2, recws ~> ',' <~ recws) <~ (recws ~> '}' <~ recws)
-      def strAll2 = '[' ~> repsep(stringPairs2, recws ~> ',' <~ recws) <~ close
+      def stringPair2 =
+        (stringLit map (_.toString)) <~ ((ws ~> ':' <~ ws) <~ stringLit)
+      def stringPairs2 = (ws ~> '{' <~ ws) ~> repsep(stringPair2, ws ~> ',' <~ ws) <~ (ws ~> '}' <~ ws)
+      def strAll2 = '[' ~> repsep(stringPairs2, ws ~> ',' <~ ws) <~ close
 
       /**
        * key-value pairs, ignore right, map at end
        */
       def stringPair3 =
-        stringLit <~ (recws ~> ':' <~ recws) <~ stringLit
+        stringLit <~ (ws ~> ':' <~ ws) <~ stringLit
       def stringPairs3 =
-        ((recws ~> '{' <~ recws) ~> repsep(stringPair3, recws ~> ',' <~ recws) <~ (recws ~> '}' <~ recws)) map { ls =>
+        ((ws ~> '{' <~ ws) ~> repsep(stringPair3, ws ~> ',' <~ ws) <~ (ws ~> '}' <~ ws)) map { ls =>
           ls map (_.toString)
         }
-      def strAll3 = '[' ~> repsep(stringPairs3, recws ~> ',' <~ recws) <~ close
+      def strAll3 = '[' ~> repsep(stringPairs3, ws ~> ',' <~ ws) <~ close
 
 		}
 	}

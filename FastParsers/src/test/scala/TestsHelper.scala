@@ -1,8 +1,9 @@
 import fastparsers.framework.implementations.FastParsers
 import fastparsers.framework.parseresult.{ParseResult, Success, Failure}
-import fastparsers.framework.parseresult.Success
 import org.scalatest.{FunSuite, FunSpec}
 import scala.util.parsing.combinator.Parsers
+
+import util.FastCharSequence
 
 /**
  * Created by Eric on 15.03.14.

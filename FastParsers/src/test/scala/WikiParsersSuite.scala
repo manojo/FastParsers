@@ -6,6 +6,7 @@ import InputWindow._
 
 import fastparsers.parsers.Parser
 import TestsHelper._
+import util.FastCharSequence
 
 import scala.language.reflectiveCalls
 

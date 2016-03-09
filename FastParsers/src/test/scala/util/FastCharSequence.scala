@@ -1,3 +1,5 @@
+package util
+
 /**
  * Found on the net
  */
@@ -27,5 +29,10 @@ class FastCharSequence(chars: Array[Char], val startBounds: Int, val endBounds: 
 
   override def toString(): String = new String(chars, startBounds, length)
 
-  private def boundsInfo = s"current: (startBounds: $startBounds, endBounds: $endBounds, length: $length, chars length: ${chars.length})"
+  private def boundsInfo = s"""current: (
+    startBounds: $startBounds,
+    endBounds: $endBounds,
+    length: $length,
+    chars length: ${chars.length}
+  )"""
 }

@@ -1,4 +1,4 @@
-import JsonParsers._
+import parsers.JsonParsers._
 import TestsHelper._
 import org.scalatest.FunSuite
 

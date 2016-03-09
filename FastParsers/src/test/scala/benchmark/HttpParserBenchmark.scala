@@ -5,6 +5,7 @@ import org.scalameter.api._
 import HttpParsers._
 import scala.collection.mutable.ListBuffer
 import lms._
+import util.FastCharSequence
 
 object HttpParserBenchmark extends PerformanceTest {
 
@@ -69,7 +70,7 @@ object HttpParserBenchmark extends PerformanceTest {
             HttpResponseParser.apply(m._1)
         }
       }
-      
+
 
   }*/
 

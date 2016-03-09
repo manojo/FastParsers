@@ -1,3 +1,5 @@
+package parsers
+
 import fastparsers.input.InputWindow
 import fastparsers.parsers.Parser
 import scala.util.parsing.combinator._

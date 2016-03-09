@@ -1,15 +1,16 @@
+package benchmark
 /**
  * Created by Eric on 05.04.14.
  */
-
 import fastparsers.input.InputWindow
 import org.scalameter.api._
-import CSVParsers._
-import JsonParsers._
+import parsers.CSVParsers._
+import parsers.JsonParsers._
 import scala.collection.mutable.ListBuffer
 
 import lms._
 import InputWindow._
+import util.FastCharSequence
 
 /*object CSVParserRun {
   def main(args: Array[String]) {
