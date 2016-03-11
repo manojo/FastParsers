@@ -3,11 +3,12 @@ package fastparsers.parsers
 import fastparsers.input._
 import fastparsers.framework._
 import fastparsers.error.ParseError
+import fastparsers.tools.TreeTools
 
 /**
  * Implementation of Basic combinators
  */
-trait BaseParsersImpl extends ParserImplBase {
+trait BaseParsersImpl extends ParserImplBase with TreeTools {
     self: ParseInput with ParseError with IgnoreResultsPolicy =>
 
   import c.universe._
@@ -222,23 +223,8 @@ trait BaseParsersImpl extends ParserImplBase {
     val tmp_f = TermName(c.freshName)
     val beginpos = TermName(c.freshName)
 
-    val tmppos = c.fresh(newTermName("temp"))
-    /**
-      * We are hardcoding the type of int for position at the moment.
-      * Should change this for generality
-      */
-    val tmpposSym = enclosingOwner.newTermSymbol(tmppos).setInfo(typeOf[Int])
-
-    /**
-     * currentInput comes from an enclosing scope and is a var
-     * we set tmpposVal to currentInput. We need to change owners
-     * etc. for preserving sanity at the compiler level
-     */
-    val tmpposVal = valDef(tmpposSym, c.internal.changeOwner(
-      q"$currentInput", enclosingOwner, tmpposSym))
-
+    def call = inline(f, List(q"$currentInput"))
     val cont = TermName(c.freshName)
-    val q"($inlinee => $body)" = f
 
     q"""
       val $beginpos = $pos
@@ -246,20 +232,7 @@ trait BaseParsersImpl extends ParserImplBase {
       var $cont = true
       while ($cont) {
         if ($isNEOI) {
-          $tmpposVal
-          val inlined = ${
-            c.internal.changeOwner(body, f.symbol, c.internal.enclosingOwner)
-            c.internal.typingTransform(body)((tree, api) => tree match {
-            case Ident(_)  =>
-              if (tree.symbol == inlinee.symbol){
-                api.typecheck(q"$tmpposSym")
-              } else {
-                api.default(tree)
-              }
-            case _ =>
-              api.default(tree)
-          })}
-          if (inlined) { $advance } else { $cont = false }
+          if ($call) { $advance } else { $cont = false }
         } else { $cont = false }
       }
 

@@ -34,6 +34,14 @@ object StringLitParsers {
     }
   }
 
+  /** Just recognizes a sequence of string literals, folds them into unit*/
+  object StringLitRecognizeUnit {
+    lazy val parser = FastParsersCharArray {
+      def ws = whitespaces
+      def main = '[' ~> repSepUnit(stringLit, ws ~> ',' <~ ws) <~ ']'
+    }
+  }
+
   /**
    * Just recognizes a sequence of string literals, puts them in a list
    * Uses `strLitRec`
@@ -53,6 +61,17 @@ object StringLitParsers {
     lazy val parser = FastParsersCharArray {
       def ws = skipws
       def main = '[' ~> repsep(stringLitRec, ws ~> ',' <~ ws) <~ ']'
+    }
+  }
+
+  /**
+   * Just recognizes a sequence of string literals, folds into unit
+   * Uses `strLitRec` and `skipws`
+   */
+  object StringLitRecognizeWsSkipRecUnit {
+    lazy val parser = FastParsersCharArray {
+      def ws = skipws
+      def main = '[' ~> repSepUnit(stringLitRec, ws ~> ',' <~ ws) <~ ']'
     }
   }
 
@@ -77,6 +96,20 @@ object StringLitParsers {
     lazy val parser = FastParsersCharArray {
       def ws = whitespaces
       def lastname = lit(arr)
+      def main = '[' ~> repsep(lastname, ws ~> ',' <~ ws) <~ ']'
+    }
+  }
+
+  /**
+   * recognizes a sequence of string literals, which are all
+   * "lastname", puts them in a list. The array is hoisted out
+   * Using litrec instead of lit
+   */
+  object LastNameHoistedLitRec {
+    val arr = "\"lastname\"".toCharArray
+    lazy val parser = FastParsersCharArray {
+      def ws = whitespaces
+      def lastname = litRec(arr)
       def main = '[' ~> repsep(lastname, ws ~> ',' <~ ws) <~ ']'
     }
   }

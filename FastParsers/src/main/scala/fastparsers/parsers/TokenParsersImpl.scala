@@ -13,6 +13,7 @@ trait TokenParsersImpl extends ParserImplBase { self: StringLikeInput with Parse
 
   override def expand(tree: c.Tree, rs: ResultsStruct) = tree match {
     case q"$_.lit($str)"     => parseLit(str, rs)
+    case q"$_.litRec($str)"     => parseLit(str, rs)
     case q"$_.ident"         => parseIdentifier(rs)
     case q"$_.stringLit"     => parseStringLit(rs)
     case q"$_.stringLitRec"  => parseStringLitRec(rs)
@@ -66,6 +67,34 @@ trait TokenParsersImpl extends ParserImplBase { self: StringLikeInput with Parse
     """
     }
   }
+
+  private def parseLitRec(str: c.Tree, rs: ResultsStruct) = {
+    val tmpstr = TermName(c.freshName)
+    val litsize = TermName(c.freshName)
+    val i = TermName(c.freshName)
+    //error = "`" + $str + "' expected but " + (if ($isEOI) "EOF" else $currentInput) + " found at " + $pos
+    mark { rollback =>
+     q"""
+      var $i = 0
+      val $litsize = $str.length
+      $skipWhiteSpace
+      while ($isNEOI && $i < $litsize && $currentInput == $str.charAt($i)){
+        $i = $i + 1
+        $advance
+      }
+      if ($i == $litsize){
+        $success = true
+        ${rs.assignNew(str, typeOf[Unit])}
+      }
+      else {
+        $success = false
+        ${pushError("`" + show(str) + "' expected but ... found", pos)}
+        $rollback
+      }
+    """
+    }
+  }
+
 
   private def parseIdentifier(rs: ResultsStruct) = {
     val beginpos = TermName(c.freshName)
