@@ -1,13 +1,13 @@
 package fastparsers.parsers
 
-import fastparsers.input.StringLikeInput
+import fastparsers.input.ArrayLikeInput
 import fastparsers.error.ParseError
 
 /**
  * Created by Eric on 22.04.14.
  * Implementation of TokenParsers
  */
-trait TokenParsersImpl extends ParserImplBase { self: StringLikeInput with ParseError =>
+trait TokenParsersImpl extends ParserImplBase { self: ArrayLikeInput with ParseError =>
 
   import c.universe._
 
