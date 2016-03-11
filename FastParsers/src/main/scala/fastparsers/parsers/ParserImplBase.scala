@@ -15,6 +15,11 @@ trait ParserImplBase { self: ParseInput with ParseError =>
   import c.universe._
 
   /**
+   * CONSTANTS
+   */
+  final val UNIT: Unit = ()
+
+  /**
    * Represent a result variable
    * _1 : Variable name
    * _2 : Variable type

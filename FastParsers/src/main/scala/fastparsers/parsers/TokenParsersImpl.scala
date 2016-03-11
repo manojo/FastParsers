@@ -175,7 +175,7 @@ trait TokenParsersImpl extends ParserImplBase { self: ArrayLikeInput with ParseE
         if ($isNEOI) {
           $success = true
           $advance
-          ${rs.assignNew(q"()", typeOf[Unit])}
+          ${rs.assignNew(q"$UNIT", typeOf[Unit])}
         }
         else {
           $success = false
@@ -272,7 +272,7 @@ trait TokenParsersImpl extends ParserImplBase { self: ArrayLikeInput with ParseE
   private def parseSkipWS(rs: ResultsStruct) = {
     q"""
       $skipWhiteSpace
-      ${rs.assignNew(q"()", typeOf[Unit])}
+      ${rs.assignNew(q"$UNIT", typeOf[Unit])}
       $success = true
     """
   }

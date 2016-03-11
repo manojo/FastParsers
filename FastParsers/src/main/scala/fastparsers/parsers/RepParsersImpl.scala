@@ -207,13 +207,13 @@ trait RepParsersImpl extends ParserImplBase with TreeTools { self: ParseInput wi
 
     val assignSuccess =
         q"""
-          ${rs.assignTo(result, q"()")}
+          ${rs.assignTo(result, q"$UNIT")}
           $success = true
         """
 
     q"""
       var $cont = true
-      val $tmp_result = ()
+      val $tmp_result = $UNIT
       while($cont) {
         $innertree1
       }
