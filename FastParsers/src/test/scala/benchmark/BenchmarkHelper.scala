@@ -9,6 +9,7 @@ import util.FastCharSequence
 
 abstract class BenchmarkHelper extends PerformanceTest.OfflineReport {
 
+  //override def reporter = new Reporter.Composite(CSVReporter, super.reporter)
   //lazy val executor = LocalExecutor(
   //  new Executor.Warmer.Default,
   //  Aggregator.average,

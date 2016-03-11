@@ -1,4 +1,3 @@
-/*
 /**
  * Created with IntelliJ IDEA.
  * User: Eric
@@ -10,12 +9,7 @@
 //because warnings
 
 import fastparsers.framework.getAST
-import fastparsers.framework.implementations.{
-  FastParsers,
-  FastPrinters,
-  FastArrayParsers //,
-//  TransformedPrinters
-}
+import fastparsers.framework.implementations.FastPrinters
 import fastparsers.framework.parseresult._
 import fastparsers.input.InputWindow
 import fastparsers.parsers.Parser
@@ -27,103 +21,103 @@ import scala.reflect.ClassTag
 
 object KVSchemaKnownRecognizeAuthorInfos {
 
-  val login = "\"login\"".toCharArray
-  val avatar_url = "\"avatar_url\"".toCharArray
-  val gravatar_id = "\"gravatar_id\"".toCharArray
-  val url = "\"url\"".toCharArray
-  val html_url = "\"html_url\"".toCharArray
-  val followers_url = "\"followers_url\"".toCharArray
-  val following_url = "\"following_url\"".toCharArray
-  val gists_url = "\"gists_url\"".toCharArray
-  val starred_url = "\"starred_url\"".toCharArray
-  val subscriptions_url = "\"subscriptions_url\"".toCharArray
-  val organizations_url = "\"organizations_url\"".toCharArray
-  val repos_url = "\"repos_url\"".toCharArray
-  val events_url = "\"events_url\"".toCharArray
-  val received_events_url = "\"received_events_url\"".toCharArray
-  val authortype = "\"type\"".toCharArray
-  val id = "\"id\"".toCharArray
+   val login = "\"login\"".toCharArray
+   val avatar_url = "\"avatar_url\"".toCharArray
+   val gravatar_id = "\"gravatar_id\"".toCharArray
+   val url = "\"url\"".toCharArray
+   val html_url = "\"html_url\"".toCharArray
+   val followers_url = "\"followers_url\"".toCharArray
+   val following_url = "\"following_url\"".toCharArray
+   val gists_url = "\"gists_url\"".toCharArray
+   val starred_url = "\"starred_url\"".toCharArray
+   val subscriptions_url = "\"subscriptions_url\"".toCharArray
+   val organizations_url = "\"organizations_url\"".toCharArray
+   val repos_url = "\"repos_url\"".toCharArray
+   val events_url = "\"events_url\"".toCharArray
+   val received_events_url = "\"received_events_url\"".toCharArray
+   val authortype = "\"type\"".toCharArray
+   val id = "\"id\"".toCharArray
 
-  val site_admin = "\"site_admin\"".toCharArray
+   val site_admin = "\"site_admin\"".toCharArray
 
 
-  val `true` = "true".toCharArray
-  val `false` = "false".toCharArray
-  //import fastparsers.framework.implementations.FastParsersCharArray._
-  import FastPrinters._
-  lazy val parser = FastParser {
+   val `true` = "true".toCharArray
+   val `false` = "false".toCharArray
 
-    def ws = skipws
-    def braceOpen = ws ~> '{' ~> ws
-    def braceClose = ws ~> '}' ~> ws
-    def comma = ws ~> ',' ~> ws
-    def colon = ws ~> ':' ~> ws
+   import FastPrinters._
+   lazy val parser = FastParser {
 
-    def num = number
-    def strLit = stringLitRec
+     def ws = skipws
+     def braceOpen = ws ~> '{' ~> ws
+     def braceClose = ws ~> '}' ~> ws
+     def comma = ws ~> ',' ~> ws
+     def colon = ws ~> ':' ~> ws
 
-    def loginParser = ws ~> litRec(login) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-    def avatar_urlParser = ws ~> litRec(avatar_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-    def gravatar_idParser = ws ~> litRec(gravatar_id) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-    def urlParser = ws ~> litRec(url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-    def html_urlParser = ws ~> litRec(html_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-    def followers_urlParser = ws ~> litRec(followers_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-    def following_urlParser = ws ~> litRec(following_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-    def gists_urlParser = ws ~> litRec(gists_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-    def starred_urlParser = ws ~> litRec(starred_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-    def subscriptions_urlParser = ws ~> litRec(subscriptions_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-    def organizations_urlParser = ws ~> litRec(organizations_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-    def repos_urlParser = ws ~> litRec(repos_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-    def events_urlParser = ws ~> litRec(events_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-    def received_events_urlParser = ws ~> litRec(received_events_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-    def authortypeParser = ws ~> litRec(authortype) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+     def num = number
+     def strLit = stringLitRec
 
-    def idParser = //: Parser[String] =
-      ws ~> litRec(id) ~> colon ~> num ~> ws
+     def loginParser = ws ~> litRec(login) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+     def avatar_urlParser = ws ~> litRec(avatar_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+     def gravatar_idParser = ws ~> litRec(gravatar_id) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+     def urlParser = ws ~> litRec(url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+     def html_urlParser = ws ~> litRec(html_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+     def followers_urlParser = ws ~> litRec(followers_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+     def following_urlParser = ws ~> litRec(following_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+     def gists_urlParser = ws ~> litRec(gists_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+     def starred_urlParser = ws ~> litRec(starred_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+     def subscriptions_urlParser = ws ~> litRec(subscriptions_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+     def organizations_urlParser = ws ~> litRec(organizations_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+     def repos_urlParser = ws ~> litRec(repos_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+     def events_urlParser = ws ~> litRec(events_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+     def received_events_urlParser = ws ~> litRec(received_events_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+     def authortypeParser = ws ~> litRec(authortype) ~> ws ~> ':' ~> ws ~> strLit ~> ws
 
-    def siteAdmin: Parser[Unit] =
-      ws ~> litRec(site_admin) ~> colon ~> (
-        litRec(`true`) | litRec(`false`)
-      )
+     def idParser = //: Parser[String] =
+       ws ~> litRec(id) ~> colon ~> num ~> ws
 
-    def authorInfo: Parser[Unit] = (braceOpen ~>
-      (loginParser <~ comma) ~>
-      (idParser <~ comma) ~>
-      (avatar_urlParser <~ comma) ~>
-      (gravatar_idParser <~ comma) ~>
-      (urlParser <~ comma) ~>
-      (html_urlParser <~ comma) ~>
-      (followers_urlParser <~ comma) ~>
-      (following_urlParser <~ comma) ~>
-      (gists_urlParser <~ comma) ~>
-      (starred_urlParser <~ comma) ~>
-      (subscriptions_urlParser <~ comma) ~>
-      (organizations_urlParser <~ comma) ~>
-      (repos_urlParser <~ comma) ~>
-      (events_urlParser <~ comma) ~>
-      (received_events_urlParser <~ comma) ~>
-      (authortypeParser <~ comma) ~>
-      (siteAdmin ~> braceClose))
+     def siteAdmin: Parser[Unit] =
+       ws ~> litRec(site_admin) ~> colon ~> (
+         litRec(`true`) | litRec(`false`)
+       )
 
-    def authorInfos = ((ws ~> '[' ~> ws) ~>
-      repSepUnit(authorInfo, ws ~> ',' ~> ws) <~
-    (ws ~> ']' ~> ws))
+     def authorInfo: Parser[Unit] = (braceOpen ~>
+       (loginParser <~ comma) ~>
+       (idParser <~ comma) ~>
+       (avatar_urlParser <~ comma) ~>
+       (gravatar_idParser <~ comma) ~>
+       (urlParser <~ comma) ~>
+       (html_urlParser <~ comma) ~>
+       (followers_urlParser <~ comma) ~>
+       (following_urlParser <~ comma) ~>
+       (gists_urlParser <~ comma) ~>
+       (starred_urlParser <~ comma) ~>
+       (subscriptions_urlParser <~ comma) ~>
+       (organizations_urlParser <~ comma) ~>
+       (repos_urlParser <~ comma) ~>
+       (events_urlParser <~ comma) ~>
+       (received_events_urlParser <~ comma) ~>
+       (authortypeParser <~ comma) ~>
+       (siteAdmin ~> braceClose))
 
-    //def main = authorInfos
-  }
+     def authorInfos = ((ws ~> '[' ~> ws) ~>
+       repSepUnit(authorInfo, ws ~> ',' ~> ws) <~
+     (ws ~> ']' ~> ws))
 
-//  def main(args: Array[String])  {
-//
-//   println("bla")
-//   pprint.pprintln(parser.ruleMap("authorInfo"))
-//   //println("===============BEFORE============")
-//   //pprint.pprintln(parserPre.ruleMap("test2"))
-//   //println()
-//   //println("===============AFTER=============")
-//   //pprint.pprintln(parserPost.ruleMap("test2"))
-//
-//  }
-}
+     def main = authorInfos
+   }
+
+   def main(args: Array[String])  {
+
+    println("bla")
+    pprint.pprintln(parser.ruleMap)
+    //println("===============BEFORE============")
+    //pprint.pprintln(parserPre.ruleMap("test2"))
+    //println()
+    //println("===============AFTER=============")
+    //pprint.pprintln(parserPost.ruleMap("test2"))
+
+   }
+ }
 
 /*
 object Test {
@@ -180,5 +174,4 @@ object Test {
 
  }
 }
-*/
 */
