@@ -2,12 +2,13 @@ package fastparsers.parsers
 
 import fastparsers.input.ParseInput
 import fastparsers.error.ParseError
+import fastparsers.tools.TreeTools
 
 /**
  * Created by Eric on 22.04.14.
  * Implementation of RepParsers
  */
-trait RepParsersImpl extends ParserImplBase { self: ParseInput with ParseError =>
+trait RepParsersImpl extends ParserImplBase with TreeTools { self: ParseInput with ParseError =>
 
   import c.universe._
 
@@ -22,6 +23,7 @@ trait RepParsersImpl extends ParserImplBase { self: ParseInput with ParseError =
     case q"$_.repsep1[$typ,$d]($a,$b)"            => parseRepsep(a, b, typ, atLeastOnce = true, rs)
     case q"$_.until[$typ,$d]($a,$b)"              => parseUntil(a, b, typ, rs)
     case q"$a foldLeft[$d]($init,$f)"             => parseFoldLeft(a, init, f, d, rs)
+    case q"$a foldLeft2[$d]($init,$f)"            => parseFoldLeft2(a, init, f, d, rs)
     case q"$a foldRight[$d,$ptype]($init,$f)"     => parseFoldRight(a, init, f, d, ptype, rs)
     case q"$a reduceLeft[$d]($f)"                 => parseReduceLeft(a, f, d, rs)
     case q"$a reduceRight[$d]($f)"                => parseReduceRight(a, f, d, rs)
@@ -266,12 +268,15 @@ trait RepParsersImpl extends ParserImplBase { self: ParseInput with ParseError =
     val tmp_f = TermName(c.freshName)
     val result = rs.newVar(typ)
 
+    def call = q"$tmp_f($result, ${results_tmp.combine})"
+
     val inner = mark {
       rollback =>
         q"""
         ${expand(a, results_tmp)}
          if ($success){
-           ${rs.assignTo(result, q"$tmp_f($result,${results_tmp.combine})")}
+          ${rs.assignTo(result, call)}
+           //successBody
           }
          else {
           $cont = false
@@ -281,6 +286,42 @@ trait RepParsersImpl extends ParserImplBase { self: ParseInput with ParseError =
     }
     q"""
       val $tmp_f = $f
+      var $cont = true
+      ${rs.assignTo(result, init)}
+      while($cont){
+        $inner
+      }
+      $success = true
+    """
+  }
+
+  /**
+   * We inline the body of the combine function rather than apply it here
+   */
+  private def parseFoldLeft2(a: c.Tree, init: c.Tree, f: c.Tree, typ: c.Tree, rs: ResultsStruct) = {
+    var results_tmp = rs.temporary
+    val cont = TermName(c.freshName)
+    val tmp_f = TermName(c.freshName)
+    val result = rs.newVar(typ)
+
+    def call = inline(f, List(q"$result", q"${results_tmp.combine}"))
+
+    val inner = mark {
+      rollback =>
+        q"""
+        ${expand(a, results_tmp)}
+         if ($success){
+          ${rs.assignTo(result, call)}
+           //successBody
+          }
+         else {
+          $cont = false
+          $rollback
+         }
+      """
+    }
+
+    q"""
       var $cont = true
       ${rs.assignTo(result, init)}
       while($cont){

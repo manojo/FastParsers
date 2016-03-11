@@ -80,8 +80,7 @@ trait ParserImplBase { self: ParseInput with ParseError =>
       }
       else if (usedResults.size == 1)
         q"${usedResults(0)._1}"
-      else
-        q"Nil"
+      else q"Nil" //throw new Error("no result found")
     }
 
   def combineType: c.Tree = {

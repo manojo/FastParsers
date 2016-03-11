@@ -29,8 +29,10 @@ object Test {
   def isDigit(c: Char) = (c >= '0') && (c <= '9')
 
   val parserPre = {
-    import FastPrinters._
-    val parser = FastParser {
+    import fastparsers.framework.implementations.FastParsersCharArray._
+    //import FastParsers._
+    val arr = "greetings".toCharArray
+    val parser = FastParsersCharArray {
       def digit2Int: Parser[Int] = acceptIf(isDigit) map { c =>
         (c - '0').toInt
       }
@@ -39,7 +41,10 @@ object Test {
         ls => ls.foldLeft[Int](0)((acc, x) => acc * 10 + x)
       }
 
-      def myws = takeWhile2(x => x == ' ' || x == '\n')
+      def myws = takeWhile3(x => x == ' ' || x == '\n')
+      def nums: Parser[Unit] = repSepUnit(digit2Int, (skipws ~> ',' <~ skipws))
+      def sum = digit2Int.foldLeft[Int](0, (acc, elem) => acc + elem)
+      def greetings = litRec(arr)
     }
     parser
   }
@@ -65,7 +70,7 @@ object Test {
  def main(args: Array[String])  {
 
   println("bla")
-  pprint.pprintln(parserPre.ruleMap("myws"))
+  pprint.pprintln(parserPre.nums("1, 2, 3,   4".toCharArray))
   //println("===============BEFORE============")
   //pprint.pprintln(parserPre.ruleMap("test2"))
   //println()
