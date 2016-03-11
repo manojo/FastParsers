@@ -93,8 +93,59 @@ trait TreeTools {
    * @param params
    * @return
    */
-   def getParserParams(params: List[c.Tree]) =
-     params.map{case ValDef(_,name,tpt,_) => (name,tpt.tpe)}
-       .filter(_._2 <:< typeOf[Parser[_]])
-       .map(x => (x._1,getInnerTypeOf[Parser[_]](x._2).get.head)) //TODO what do you mean its super ugly ?
+  def getParserParams(params: List[c.Tree]) =
+    params.map{case ValDef(_,name,tpt,_) => (name,tpt.tpe)}
+      .filter(_._2 <:< typeOf[Parser[_]])
+      .map(x => (x._1,getInnerTypeOf[Parser[_]](x._2).get.head)) //TODO what do you mean its super ugly ?
+
+  /**
+   * A utility function for inlining function bodies
+   * @author @densh @manojo
+   * inspired from macrology
+   * @see https://github.com/scalamacros/macrology201/blob/4dfbdf89704b3e91de056b5072c605028b25357a/macros/src/main/scala/Macros.scala#L41
+   */
+  def inline(fun: c.Tree, args: List[c.Tree]): c.Tree = {
+    import c.internal._, decorators._
+    assert(fun.tpe != null)
+
+    //assuming anon function
+    val q"(..$params) => $body" = fun
+
+    /**
+     * create fresh names and symbols for each
+     * param in question
+     */
+    val syms = params map { param =>
+      val q"..$_ val $_: ${tpe: Type} = $_" = param
+      val trmName = c.fresh(newTermName("temp"))
+      enclosingOwner.newTermSymbol(trmName).setInfo(tpe)
+    }
+
+    /**
+     * create valDefs which evaluate each of the args
+     */
+    val vals = syms.zip(args).map { case (sym, arg) =>
+      valDef(sym, c.internal.changeOwner(arg, enclosingOwner, sym))
+    }
+
+    val old2new = params.map(_.symbol).zip(syms).toMap
+
+    /**
+     * perform the inlining itself
+     */
+    val inlined = {
+      c.internal.changeOwner(body, fun.symbol, c.internal.enclosingOwner)
+      c.internal.typingTransform(body)((tree, api) => tree match {
+        case Ident(_) if old2new.contains(tree.symbol) =>
+            api.typecheck(q"${old2new(tree.symbol)}")
+        case _ =>
+          api.default(tree)
+      })
+    }
+
+    q"""
+      ..$vals
+      $inlined
+    """
+  }
  }
