@@ -76,7 +76,6 @@ trait BaseParsers[Elem, Input] {
   @compileTimeOnly("success can't be used outside FastParser")
   def success[T](v: T): Parser[T] = ???
 
-
   @compileTimeOnly("position can't be used outside FastParser")
   def position: Parser[Int] = ???
 
@@ -89,13 +88,6 @@ trait BaseParsers[Elem, Input] {
   def callParam[T](p: String) : Parser[T] = ???
   def compound[T](p:Parser[T]): Parser[T] = ???
   def foreignCall[T](p: Any, ruleName: Any, params: Any*) = ???
-
-  @compileTimeOnly("can't be used outside FastParser")
-  def stringLitRec: Parser[Unit] = ???
-
-  @compileTimeOnly("can't be used outside FastParser")
-  def skipws: Parser[Unit] = ???
-
 
   @compileTimeOnly("positioned can't be used outside FastParser")
   def paramRule[T](p: Any, params: Any*): Parser[T] = ???

@@ -18,6 +18,7 @@ trait RepParsersImpl extends ParserImplBase { self: ParseInput with ParseError =
     case q"$_.repN[$d]($a,$n)"                    => parseRep(a, d, n, n, rs)
     case q"$_.opt[$d]($a)"                        => parseOpt(a, d, rs)
     case q"$_.repsep[$typ,$d]($a,$b)"             => parseRepsep(a, b, typ, atLeastOnce = false, rs)
+    case q"$_.repSepUnit[$typ,$d]($a,$b)"         => parseRepSepUnit(a, b, typ, atLeastOnce = false, rs)
     case q"$_.repsep1[$typ,$d]($a,$b)"            => parseRepsep(a, b, typ, atLeastOnce = true, rs)
     case q"$_.until[$typ,$d]($a,$b)"              => parseUntil(a, b, typ, rs)
     case q"$a foldLeft[$d]($init,$f)"             => parseFoldLeft(a, init, f, d, rs)
@@ -165,6 +166,52 @@ trait RepParsersImpl extends ParserImplBase { self: ParseInput with ParseError =
     q"""
       var $cont = true
       val $tmp_result = new ListBuffer[$typ]()
+      while($cont) {
+        $innertree1
+      }
+      $assignSuccess
+    """
+  }
+
+  private def parseRepSepUnit(a: c.Tree, sep: c.Tree, typ: c.Tree, atLeastOnce: Boolean, rs: ResultsStruct) = {
+    var results_tmp = rs.temporary
+    var results_tmp2 = rs.temporary
+    val cont = TermName(c.freshName)
+    val tmp_result = TermName(c.freshName)
+    val result = rs.newVar(tq"Unit")
+
+    val innertree2 = mark {  rollback =>
+        q"""
+          ${expand(sep, results_tmp2)}
+           if (!$success) {
+            $cont = false
+            $rollback
+           }
+        """
+    }
+
+    val innertree1 = mark { rollback =>
+        q"""
+          ${expand(a, results_tmp)}
+          if ($success) {
+             $innertree2
+          }
+          else {
+            $cont = false
+            $rollback
+          }
+         """
+    }
+
+    val assignSuccess =
+        q"""
+          ${rs.assignTo(result, q"()")}
+          $success = true
+        """
+
+    q"""
+      var $cont = true
+      val $tmp_result = ()
       while($cont) {
         $innertree1
       }

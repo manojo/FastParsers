@@ -124,6 +124,32 @@ object KVParsers {
 
   /**
    * A pair string parser. Parses stuff of the form
+   * [{"name" : "...", "lastname": "..."}]
+   * just recognize, arrays hoisted out
+   * use `litRec`, `repSepUnit`, `skipws`
+   */
+  object KVSchemaKnownRecognizeUnit {
+    /**
+     * very important to hoist out the literals
+     * gains perfs like anything!
+     */
+    val nameArr = "\"name\"".toCharArray
+    val lastnameArr = "\"lastname\"".toCharArray
+
+    lazy val parser = FastParsersCharArray {
+      def ws = skipws
+      def colon = ws ~> ':' <~ ws
+      def name: Parser[Unit] = (litRec(nameArr) <~ colon) <~ stringLitRec
+      def lastname: Parser[Unit] = (litRec(lastnameArr) <~ colon) <~ stringLitRec
+      def stringPairs: Parser[Unit] = ((ws ~> '{' <~ ws) ~>
+        (name ~> (ws ~> ',' <~ ws) ~> lastname) <~
+      (ws ~> '}' <~ ws))
+      def main: Parser[Unit] = ('[' ~> repSepUnit(stringPairs, ws ~> ',' <~ ws) <~ ']')
+    }
+  }
+
+  /**
+   * A pair string parser. Parses stuff of the form
    * [{"..." : "...", "...": "..."}]
    * recognizes a pair and throws out the key
    */
@@ -320,4 +346,82 @@ object KVParsers {
       def main = ('[' ~> repsep(stringPairs, ws ~> ',' <~ ws) <~ ']')
     }
   }
+
+  /**
+   * kv recognize, but for info on weeks
+   */
+   object KVSchemaKnownRecognizeWeeks {
+     /**
+      * very important to hoist out the literals
+      * gains perfs like anything!
+      */
+     val wArr = "\"w\"".toCharArray
+     val aArr = "\"a\"".toCharArray
+     val dArr = "\"d\"".toCharArray
+     val cArr = "\"c\"".toCharArray
+
+     val weeks = "\"weeks\"".toCharArray
+
+     lazy val parser = FastParsersCharArray {
+       def ws = whitespaces
+       def w = (lit(wArr) <~ (ws ~> ':' <~ ws)) ~ number
+       def a = (lit(aArr) <~ (ws ~> ':' <~ ws)) ~ number
+       def d = (lit(dArr) <~ (ws ~> ':' <~ ws)) ~ number
+       def c = (lit(cArr) <~ (ws ~> ':' <~ ws)) ~ number
+
+       def weekInfo = ((ws ~> '{' <~ ws) ~>
+         (w ~> (ws ~> ',' <~ ws) ~>
+          a ~> (ws ~> ',' <~ ws) ~>
+          d ~> (ws ~> ',' <~ ws) ~>
+          c) <~
+       (ws ~> '}' <~ ws))
+
+       def weekInfos =
+        (ws ~> '[' <~ ws) ~> repsep(weekInfo, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
+
+       def manyWeekInfos =
+        (ws ~> '[' <~ ws) ~> repsep(weekInfos, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
+
+       def main = manyWeekInfos
+     }
+   }
+
+   /**
+    * kv recognize, but for info on weeks, make everything a recognizer
+    */
+    object KVSchemaKnownRecognizeWeeksRec {
+      /**
+       * very important to hoist out the literals
+       * gains perfs like anything!
+       */
+      val wArr = "\"w\"".toCharArray
+      val aArr = "\"a\"".toCharArray
+      val dArr = "\"d\"".toCharArray
+      val cArr = "\"c\"".toCharArray
+
+      val weeks = "\"weeks\"".toCharArray
+
+      lazy val parser = FastParsersCharArray {
+        def ws = skipws
+        def w = (lit(wArr) <~ (ws ~> ':' <~ ws)) ~ number
+        def a = (lit(aArr) <~ (ws ~> ':' <~ ws)) ~ number
+        def d = (lit(dArr) <~ (ws ~> ':' <~ ws)) ~ number
+        def c = (lit(cArr) <~ (ws ~> ':' <~ ws)) ~ number
+
+        def weekInfo = ((ws ~> '{' <~ ws) ~>
+          (w ~> (ws ~> ',' <~ ws) ~>
+           a ~> (ws ~> ',' <~ ws) ~>
+           d ~> (ws ~> ',' <~ ws) ~>
+           c) <~
+        (ws ~> '}' <~ ws))
+
+        def weekInfos =
+         (ws ~> '[' <~ ws) ~> repSepUnit(weekInfo, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
+
+        def manyWeekInfos =
+         (ws ~> '[' <~ ws) ~> repSepUnit(weekInfos, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
+
+        def main = manyWeekInfos
+      }
+    }
 }

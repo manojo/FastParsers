@@ -25,40 +25,44 @@ abstract class BenchmarkHelper extends PerformanceTest.OfflineReport {
   //lazy val persistor = Persistor.None
 
 
-  def independentSamples = 16
+  def independentSamples = 1 //16
   def benchRunsPerSample = 128
   def benchRuns = independentSamples * benchRunsPerSample
 
+  def memoryInHeapSeq = Seq("16g")
+
   type Rule = (Array[Char], Int) => ParseResult[Any, _]
 
-  def runBenchmark(desc: String, files: List[String],
-                   methods: List[(String, Rule)]) = {
+  /** every benchmark must provide files to run on */
+  def files: List[Array[Char]]
+  def description: String
 
-    val range = Gen.enumeration("size"){(files map { (f: String) =>
-      val fileName = "FastParsers/src/test/resources/micro/" + f
-      val file = scala.io.Source.fromFile(fileName).getLines mkString "\n"
-      val fileArray = file.toCharArray
-      //val fileSeq = new FastCharSequence(fileArray)
-      fileArray
-    }).toSeq }
+  lazy val range = Gen.enumeration("size")(files)
 
-    /**
-     * Config taken from @nicolasstucki s rrb-vector stuff
-     */
-    performance of s"$desc" config(
+  def runBM(f: Array[Char], mName: String, meth: Rule): Unit = {
+    performance of s"$mName" in {
+      measure method mName in {
+        val Success(res) = meth(f, 0)
+        //println(res)
+        res
+      }
+    }
+  }
+
+  /**
+   * Design inspired by @nicolasstucki
+   */
+  def performanceOfParsers(measurer: Array[Char] => Unit): Unit = {
+    performance of s"$description" config(
       Key.exec.benchRuns -> benchRuns,
       // Key.verbose -> false,
-      Key.exec.independentSamples -> independentSamples
+      Key.exec.independentSamples -> independentSamples,
       //Key.reports.resultDir -> "benchmark_results"
-      //Key.exec.jvmflags -> s"-Xms$memoryInHeap -Xmx$memoryInHeap" // "-XX:+UnlockDiagnosticVMOptions -XX:+PrintInlining" "-XX:+PrintCompilation",
+      Key.exec.jvmflags -> s"-Xms2g -Xmx4g" // "-XX:+UnlockDiagnosticVMOptions -XX:+PrintInlining" "-XX:+PrintCompilation",
     ) in {
-      for ((m, rule) <- methods) {
-        measure method m in {
-          using(range) in { fs =>
-            for (f <- fs) {
-              val Success(res) = rule(f, 0)
-            }
-          }
+      using(range) in { fs =>
+        for (f <- fs) {
+          measurer(f)
         }
       }
     }
