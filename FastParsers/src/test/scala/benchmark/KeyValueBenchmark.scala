@@ -2,44 +2,44 @@ package benchmark
 
 import fastparsers.input.InputWindow
 import org.scalameter.api._
-import org.scalameter._
 import fastparsers.framework.parseresult.{ParseResult, Success, Failure}
 import fastparsers.parsers.Parser
 
 import InputWindow._
 import parsers.KVParsers._
 
-class KeyValueBenchmarkHelper extends BenchmarkHelper {
-
-  val files = List("kvpairs.txt") map { (f: String) =>
+object KeyValueFiles {
+  val fileArrays = List("kvpairs.txt") map { (f: String) =>
     val fileName = "FastParsers/src/test/resources/micro/" + f
     val file = scala.io.Source.fromFile(fileName).getLines mkString "\n"
     val fileArray = file.toCharArray
-    //val fileSeq = new FastCharSequence(fileArray)
     fileArray
   }
+  implicit val range = Gen.enumeration("size")(fileArrays)
+}
 
+class KeyValueBenchmarkHelper extends BenchmarkHelper {
   val description = "key-value pairs"
 }
 
 class KeyValueAll extends KeyValueBenchmarkHelper {
-  //include[KeyValueMapEarly]
-  //include[KeyValueMapAtPairTime]
-  //include[KeyValueMapAtInnerListTime]
-  //include[KeyValueMapAtVeryEnd]
-  //include[KeyValueRecognize]
+  include[KeyValueMapEarly]
+  include[KeyValueMapAtPairTime]
+  include[KeyValueMapAtInnerListTime]
+  include[KeyValueMapAtVeryEnd]
+  include[KeyValueRecognize]
   include[KeyValueSchemaKnownRecognize]
   include[KeyValueSchemaKnownRecognizeUnit]
-  //include[KeyValueRecognizeGetValue]
-  //include[KeyValueRecognizeAndGetValueAtPairTime]
-  //include[KeyValueRecognizeTakeWhile2]
-  //include[KeyValueRecognizeTakeWhile2Hoisted]
-  //include[KeyValueRecognizeTakeWhile3]
-  //include[KeyValueRecognizeWSSkip]
-  //include[KeyValueRecognizeRecWSSkip]
-  //include[KeyValueRecognizeAndGetValueAtEnd]
-  //include[KeyValueRecognizeAndGetValueMapAtEnd]
-  //include[KeyValueRecognizeAndGetValueSchemaKnown]
+  include[KeyValueRecognizeGetValue]
+  include[KeyValueRecognizeAndGetValueAtPairTime]
+  include[KeyValueRecognizeTakeWhile2]
+  include[KeyValueRecognizeTakeWhile2Hoisted]
+  include[KeyValueRecognizeTakeWhile3]
+  include[KeyValueRecognizeWSSkip]
+  include[KeyValueRecognizeRecWSSkip]
+  include[KeyValueRecognizeAndGetValueAtEnd]
+  include[KeyValueRecognizeAndGetValueMapAtEnd]
+  include[KeyValueRecognizeAndGetValueSchemaKnown]
   include[KeyValueJSON]
 }
 
@@ -49,6 +49,7 @@ class KeyValueAll extends KeyValueBenchmarkHelper {
  * maps stuff into strings early
  */
 class KeyValueMapEarly extends KeyValueBenchmarkHelper {
+  import KeyValueFiles._
   performanceOfParsers { f =>
     runBM(f, "mapEarly", KVMapEarly.parser.main)
   }
@@ -60,6 +61,7 @@ class KeyValueMapEarly extends KeyValueBenchmarkHelper {
  * maps at pair creation time
  */
 class KeyValueMapAtPairTime extends KeyValueBenchmarkHelper {
+  import KeyValueFiles._
   performanceOfParsers { f =>
     runBM(f, "mapAtPairTime", KVMapAtPairTime.parser.main)
   }
@@ -71,6 +73,7 @@ class KeyValueMapAtPairTime extends KeyValueBenchmarkHelper {
  * maps at end of inner list
  */
 class KeyValueMapAtInnerListTime extends KeyValueBenchmarkHelper {
+  import KeyValueFiles._
   performanceOfParsers { f =>
     runBM(f, "mapAtInnerListTime", KVMapAtInnerListTime.parser.main)
   }
@@ -82,6 +85,7 @@ class KeyValueMapAtInnerListTime extends KeyValueBenchmarkHelper {
  * maps at the very end
  */
 class KeyValueMapAtVeryEnd extends KeyValueBenchmarkHelper {
+  import KeyValueFiles._
   performanceOfParsers { f =>
     runBM(f, "mapAtVeryEnd", KVMapAtVeryEnd.parser.main)
   }
@@ -93,6 +97,7 @@ class KeyValueMapAtVeryEnd extends KeyValueBenchmarkHelper {
  * just recognize
  */
 class KeyValueRecognize extends KeyValueBenchmarkHelper {
+  import KeyValueFiles._
   performanceOfParsers { f =>
     runBM(f, "recognize", KVRecognize.parser.main)
   }
@@ -104,12 +109,14 @@ class KeyValueRecognize extends KeyValueBenchmarkHelper {
  * just recognize, arrays hoisted out
  */
 class KeyValueSchemaKnownRecognize extends KeyValueBenchmarkHelper {
+  import KeyValueFiles._
   performanceOfParsers { f =>
     runBM(f, "schemaKnownRecognize", KVSchemaKnownRecognize.parser.main)
   }
 }
 
 class KeyValueSchemaKnownRecognizeUnit extends KeyValueBenchmarkHelper {
+  import KeyValueFiles._
   performanceOfParsers { f =>
     runBM(f, "schemaKnownRecognizeUnit", KVSchemaKnownRecognizeUnit.parser.main)
   }
@@ -121,6 +128,7 @@ class KeyValueSchemaKnownRecognizeUnit extends KeyValueBenchmarkHelper {
  * recognizes a pair and throws out the key
  */
 class KeyValueRecognizeGetValue extends KeyValueBenchmarkHelper {
+  import KeyValueFiles._
   performanceOfParsers { f =>
     runBM(f, "getValue", KVRecognizeGetValue.parser.main)
   }
@@ -132,6 +140,7 @@ class KeyValueRecognizeGetValue extends KeyValueBenchmarkHelper {
  * recognizes a pair and throws out the key, at pair time
  */
 class KeyValueRecognizeAndGetValueAtPairTime extends KeyValueBenchmarkHelper {
+  import KeyValueFiles._
   performanceOfParsers { f =>
     runBM(f, "getValueAtPairTime", KVRecognizeAndGetValueAtPairTime.parser.main)
   }
@@ -144,6 +153,7 @@ class KeyValueRecognizeAndGetValueAtPairTime extends KeyValueBenchmarkHelper {
  * just recognize
  */
 class KeyValueRecognizeTakeWhile2 extends KeyValueBenchmarkHelper {
+  import KeyValueFiles._
   performanceOfParsers { f =>
     runBM(f, "recognizeTakeWhile2", KVRecognizeTakeWhile2.parser.main)
   }
@@ -158,6 +168,7 @@ class KeyValueRecognizeTakeWhile2 extends KeyValueBenchmarkHelper {
  * just recognize
  */
 class KeyValueRecognizeTakeWhile2Hoisted extends KeyValueBenchmarkHelper {
+  import KeyValueFiles._
   performanceOfParsers { f =>
     runBM(f, "recognizeTakeWhile2Hoisted", KVRecognizeTakeWhile2Hoisted.parser.main)
   }
@@ -169,36 +180,42 @@ class KeyValueRecognizeTakeWhile2Hoisted extends KeyValueBenchmarkHelper {
  * using takeWhile3, which inlines its function
  */
 class KeyValueRecognizeTakeWhile3 extends KeyValueBenchmarkHelper {
+  import KeyValueFiles._
   performanceOfParsers { f =>
     runBM(f, "recognizeTakeWhile3", KVRecognizeTakeWhile3.parser.main)
   }
 }
 
 class KeyValueRecognizeWSSkip extends KeyValueBenchmarkHelper {
+  import KeyValueFiles._
   performanceOfParsers { f =>
     runBM(f, "recognizeWSSkip", KVRecognizeWSSkip.parser.main)
   }
 }
 
 class KeyValueRecognizeRecWSSkip extends KeyValueBenchmarkHelper {
+  import KeyValueFiles._
   performanceOfParsers { f =>
     runBM(f, "recognizeRecWSSkip", KVRecognizeRecWSSKip.parser.main)
   }
 }
 
 class KeyValueRecognizeAndGetValueAtEnd extends KeyValueBenchmarkHelper {
+  import KeyValueFiles._
   performanceOfParsers { f =>
     runBM(f, "recognizeAndGetValueAtEnd", KVRecognizeAndGetValueAtEnd.parser.main)
   }
 }
 
 class KeyValueRecognizeAndGetValueMapAtEnd extends KeyValueBenchmarkHelper {
+  import KeyValueFiles._
   performanceOfParsers { f =>
     runBM(f, "recognizeAndGetValueMapAtEnd", KVRecognizeAndGetValueMapAtEnd.parser.main)
   }
 }
 
 class KeyValueRecognizeAndGetValueSchemaKnown extends KeyValueBenchmarkHelper {
+  import KeyValueFiles._
   performanceOfParsers { f =>
     runBM(f, "recognizeAndGetValuesSchemaKnown", KVRecognizeAndGetValueMapAtEnd.parser.main)
   }
@@ -210,37 +227,124 @@ class KeyValueRecognizeAndGetValueSchemaKnown extends KeyValueBenchmarkHelper {
  * we do this using the general JSON parser
  */
 class KeyValueJSON extends KeyValueBenchmarkHelper {
+  import KeyValueFiles._
   import parsers.JsonParsers._
   performanceOfParsers { f =>
     runBM(f, "jsonparser", JSonImplBoxed.jsonparser.value)
   }
 }
 
-class WeeksBenchmarkHelper extends BenchmarkHelper {
-  val files = List("weeks.txt") map { (f: String) =>
+/************ WEEKS ***********/
+object WeeksFiles {
+  val fileArrays = List("weeks.txt") map { (f: String) =>
     val fileName = "FastParsers/src/test/resources/micro/" + f
     val file = scala.io.Source.fromFile(fileName).getLines mkString "\n"
     val fileArray = file.toCharArray
-    //val fileSeq = new FastCharSequence(fileArray)
     fileArray
   }
+  implicit val range = Gen.enumeration("size")(fileArrays)
+}
 
+class WeeksBenchmarkHelper extends BenchmarkHelper {
   val description = "weeks"
 }
 
 class KeyValueSchemaKnownRecognizeWeeks extends WeeksBenchmarkHelper {
+  import WeeksFiles._
   performanceOfParsers { f =>
     runBM(f, "schemaKnownRecognizeWeeks", KVSchemaKnownRecognizeWeeks.parser.main)
   }
 }
 
 class KeyValueSchemaKnownRecognizeWeeksRec extends WeeksBenchmarkHelper {
+  import WeeksFiles._
   performanceOfParsers { f =>
     runBM(f, "schemaKnownRecognizeWeeksRec", KVSchemaKnownRecognizeWeeksRec.parser.main)
   }
 }
 
 class KeyValueJSONWeeks extends WeeksBenchmarkHelper {
+  import WeeksFiles._
+  import parsers.JsonParsers._
+  performanceOfParsers { f =>
+    runBM(f, "jsonparser", JSonImplBoxed.jsonparser.value)
+  }
+}
+
+class KeyValueSchemaKnownRecognizeWeeksADT extends WeeksBenchmarkHelper {
+  import WeeksFiles._
+  performanceOfParsers { f =>
+    runBM(f, "schemaKnownRecognizeWeeksADT", KVSchemaKnownRecognizeWeeksADT.parser.main)
+  }
+}
+
+/********** AUTHORINFOS ********/
+object AuthorInfoFiles {
+  val fileArrays = List(
+      //"authorinfos.txt",
+      //"authorinfos-larger.txt"//,
+      "authorinfos-largerer.txt") map { (f: String) =>
+    val fileName = "FastParsers/src/test/resources/micro/" + f
+    val file = scala.io.Source.fromFile(fileName).getLines mkString "\n"
+    val fileArray = file.toCharArray
+    fileArray
+  }
+  implicit val range = Gen.enumeration("size")(fileArrays)
+}
+
+class AuthorInfosBenchmarkHelper extends BenchmarkHelper {
+  val description = "authorinfos"
+}
+
+class KeyValueAuthorAll extends AuthorInfosBenchmarkHelper {
+  include[KeyValueSchemaKnownRecognizeAuthorInfos]
+  include[KeyValueJSONAuthorInfos]
+}
+
+class KeyValueSchemaKnownRecognizeAuthorInfos extends AuthorInfosBenchmarkHelper {
+  import AuthorInfoFiles._
+  performanceOfParsers { f =>
+    runBM(f, "schemaKnownRecognizeAuthorInfos", KVSchemaKnownRecognizeAuthorInfos.parser.main)
+  }
+}
+
+class KeyValueJSONAuthorInfos extends AuthorInfosBenchmarkHelper {
+  import AuthorInfoFiles._
+  import parsers.JsonParsers._
+  performanceOfParsers { f =>
+    runBM(f, "jsonparser", JSonImplBoxed.jsonparser.value)
+  }
+}
+
+/********** AUTHORINFOSPartial ********/
+object AuthorPartialFiles {
+  val fileArrays = List("authorpartial.txt") map { (f: String) =>
+    val fileName = "FastParsers/src/test/resources/micro/" + f
+    val file = scala.io.Source.fromFile(fileName).getLines mkString "\n"
+    val fileArray = file.toCharArray
+    fileArray
+  }
+  implicit val range = Gen.enumeration("size")(fileArrays)
+}
+
+class AuthorPartialBenchmarkHelper extends BenchmarkHelper {
+  val description = "authorpartial"
+}
+
+class KeyValueAuthorPartialAll extends AuthorInfosBenchmarkHelper {
+  include[KeyValueSchemaKnownRecognizeAuthorPartial]
+  include[KeyValueJSONAuthorPartial]
+}
+
+class KeyValueSchemaKnownRecognizeAuthorPartial extends AuthorPartialBenchmarkHelper {
+  import AuthorPartialFiles._
+  performanceOfParsers { f =>
+    runBM(f, "schemaKnownRecognizeAuthorPartial", KVSchemaKnownRecognizeAuthorPartial.parser.main)
+  }
+}
+
+class KeyValueJSONAuthorPartial extends AuthorPartialBenchmarkHelper {
+  import AuthorPartialFiles._
   import parsers.JsonParsers._
   performanceOfParsers { f =>
     runBM(f, "jsonparser", JSonImplBoxed.jsonparser.value)

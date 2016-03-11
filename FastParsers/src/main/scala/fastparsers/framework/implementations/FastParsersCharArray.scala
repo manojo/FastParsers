@@ -25,7 +25,7 @@ object FastParsersCharArray
 class CharArrayImpl(val c: Context)
     extends BaseImpl
     with RulesTransformer
-    with RulesInliner
+    //with RulesInliner
     with ParseRules
     with BaseParsersImpl
     with RepParsersImpl

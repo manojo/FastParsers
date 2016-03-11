@@ -7,6 +7,7 @@ import fastparsers.framework.ruleprocessing.{
   RulesInliner, RulesTransformer, RulePrinter, ParseQuery, ParseRules
 }
 import fastparsers.input.StringInput
+import fastparsers.input.CharArrayInput
 import fastparsers.error.IgnoreParseError
 
 /**
@@ -15,7 +16,7 @@ import fastparsers.error.IgnoreParseError
 object FastPrinters
     extends BaseParsers[Char, String]
     with RepParsers
-    with TokenParsers[String]
+    with TokenParsers[Array[Char]]
     with FlatMapParsers {
 
   def FastParser(rules: => Unit): FinalFastParserImpl =
@@ -33,21 +34,21 @@ object FastPrinters
 class FastPrintersImpl(val c: Context)
     extends BaseImpl
     with RulesTransformer
-    with RulesInliner
+    //with RulesInliner
     with ParseRules
     with BaseParsersImpl
     with RepParsersImpl
     with TokenParsersImpl
     with FlatMapImpl
     with RulePrinter
-    with StringInput
+    with CharArrayInput
     with IgnoreParseError
-    with DontIgnoreResults {
+    with IgnoreResults {
 
   override def FastParser(rules: c.Tree) = super.FastParser(rules)
 }
 
-
+/*
 object TransformedPrinters
     extends BaseParsers[Char, String]
     with RepParsers
@@ -79,3 +80,4 @@ class TransformedPrintersImpl(val c: Context)
   override def FastParser(rules: c.Tree) = super.FastParser(rules)
 }
 
+*/
