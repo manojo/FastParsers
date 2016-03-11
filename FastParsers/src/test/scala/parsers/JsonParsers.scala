@@ -82,15 +82,13 @@ object JsonParsers {
 
   object JSonImplBoxed {
     import fastparsers.framework.implementations.FastParsersCharArray._
-    //GROS HACK
-    import fastparsers.input.InputWindow.InputWindow
 
     sealed abstract class JSValue
-    case class JSObject(map: List[(InputWindow[Array[Char]], JSValue)]) extends JSValue
+    case class JSObject(map: Map[String, JSValue]) extends JSValue
     case class JSArray(arr: List[JSValue]) extends JSValue
-    case class JSDouble(d: InputWindow[Array[Char]]) extends JSValue
-    case class JSDouble2(d: Double) extends JSValue
-    case class JSString(s: InputWindow[Array[Char]]) extends JSValue
+    //case class JSDouble(d: InputWindow[Array[Char]]) extends JSValue
+    case class JSDouble2(d: String) extends JSValue
+    case class JSString(s: String) extends JSValue
     case class JSBool(b: Boolean) extends JSValue
     case object JSNull extends JSValue
 
@@ -107,16 +105,23 @@ object JsonParsers {
        (
          obj |
          arr |
-         stringLit ^^ {x => JSString(x)} |
-         decimalNumber ^^ {x => JSDouble2(x.toString.toDouble)} |
+         stringLit ^^ {x => JSString(x.toString)} |
+         number ^^ {x => JSDouble2(x.toString/*.toDouble*/)} |
          //decimalNumber ^^ {x => JSDouble(x)} |
          lit(nullValue) ^^^ JSNull |
          lit(trueValue) ^^^ JSBool(true) |
          lit(falseValue) ^^^ JSBool(false)
        )
-      def obj:Parser[JSValue] = ('{' ~> repsep(member,comma) <~ closeBracket) ^^ {x => JSObject(x)}
+      def obj:Parser[JSValue] = ('{' ~> repsep(member,comma) <~ closeBracket) ^^ {x => JSObject(x.toMap)}
       def arr:Parser[JSValue] = ('[' ~> repsep(value,comma) <~ closeSBracket) ^^ {x => JSArray(x)}
-      def member:Parser[(InputWindow[Array[Char]], JSValue)] = stringLit ~ (lit(points) ~> value)
+      def member:Parser[(String, JSValue)] = (stringLit map (_.toString)) ~ (lit(points) ~> value)
+      def authTotal = value map {
+        case JSArray(ls) => for (JSObject(mp) <- ls) yield {
+          val JSObject(mp2) = mp("author")
+          (mp("total"), mp2("id"))
+        }
+      }
+      def main = authTotal
     }
 
   }
