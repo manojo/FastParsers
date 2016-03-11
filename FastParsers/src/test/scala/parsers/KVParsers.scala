@@ -350,78 +350,301 @@ object KVParsers {
   /**
    * kv recognize, but for info on weeks
    */
-   object KVSchemaKnownRecognizeWeeks {
-     /**
-      * very important to hoist out the literals
-      * gains perfs like anything!
-      */
-     val wArr = "\"w\"".toCharArray
-     val aArr = "\"a\"".toCharArray
-     val dArr = "\"d\"".toCharArray
-     val cArr = "\"c\"".toCharArray
+  object KVSchemaKnownRecognizeWeeks {
+    /**
+     * very important to hoist out the literals
+     * gains perfs like anything!
+     */
+    val wArr = "\"w\"".toCharArray
+    val aArr = "\"a\"".toCharArray
+    val dArr = "\"d\"".toCharArray
+    val cArr = "\"c\"".toCharArray
 
-     val weeks = "\"weeks\"".toCharArray
+    val weeks = "\"weeks\"".toCharArray
 
-     lazy val parser = FastParsersCharArray {
-       def ws = whitespaces
-       def w = (lit(wArr) <~ (ws ~> ':' <~ ws)) ~ number
-       def a = (lit(aArr) <~ (ws ~> ':' <~ ws)) ~ number
-       def d = (lit(dArr) <~ (ws ~> ':' <~ ws)) ~ number
-       def c = (lit(cArr) <~ (ws ~> ':' <~ ws)) ~ number
+    lazy val parser = FastParsersCharArray {
+      def ws = whitespaces
+      def w = (lit(wArr) <~ (ws ~> ':' <~ ws)) ~ number
+      def a = (lit(aArr) <~ (ws ~> ':' <~ ws)) ~ number
+      def d = (lit(dArr) <~ (ws ~> ':' <~ ws)) ~ number
+      def c = (lit(cArr) <~ (ws ~> ':' <~ ws)) ~ number
 
-       def weekInfo = ((ws ~> '{' <~ ws) ~>
-         (w ~> (ws ~> ',' <~ ws) ~>
-          a ~> (ws ~> ',' <~ ws) ~>
-          d ~> (ws ~> ',' <~ ws) ~>
-          c) <~
-       (ws ~> '}' <~ ws))
+      def weekInfo = ((ws ~> '{' <~ ws) ~>
+        (w ~> (ws ~> ',' <~ ws) ~>
+         a ~> (ws ~> ',' <~ ws) ~>
+         d ~> (ws ~> ',' <~ ws) ~>
+         c) <~
+      (ws ~> '}' <~ ws))
 
-       def weekInfos =
-        (ws ~> '[' <~ ws) ~> repsep(weekInfo, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
+      def weekInfos =
+       (ws ~> '[' <~ ws) ~> repsep(weekInfo, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
 
-       def manyWeekInfos =
-        (ws ~> '[' <~ ws) ~> repsep(weekInfos, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
+      def manyWeekInfos =
+       (ws ~> '[' <~ ws) ~> repsep(weekInfos, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
 
-       def main = manyWeekInfos
-     }
-   }
+      def main = manyWeekInfos
+    }
+  }
 
    /**
     * kv recognize, but for info on weeks, make everything a recognizer
     */
-    object KVSchemaKnownRecognizeWeeksRec {
-      /**
-       * very important to hoist out the literals
-       * gains perfs like anything!
-       */
-      val wArr = "\"w\"".toCharArray
-      val aArr = "\"a\"".toCharArray
-      val dArr = "\"d\"".toCharArray
-      val cArr = "\"c\"".toCharArray
+  object KVSchemaKnownRecognizeWeeksRec {
+    /**
+     * very important to hoist out the literals
+     * gains perfs like anything!
+     */
+    val wArr = "\"w\"".toCharArray
+    val aArr = "\"a\"".toCharArray
+    val dArr = "\"d\"".toCharArray
+    val cArr = "\"c\"".toCharArray
 
-      val weeks = "\"weeks\"".toCharArray
+    val weeks = "\"weeks\"".toCharArray
 
-      lazy val parser = FastParsersCharArray {
-        def ws = skipws
-        def w = (lit(wArr) <~ (ws ~> ':' <~ ws)) ~ number
-        def a = (lit(aArr) <~ (ws ~> ':' <~ ws)) ~ number
-        def d = (lit(dArr) <~ (ws ~> ':' <~ ws)) ~ number
-        def c = (lit(cArr) <~ (ws ~> ':' <~ ws)) ~ number
+    lazy val parser = FastParsersCharArray {
+      def ws = skipws
+      def w = (lit(wArr) <~ (ws ~> ':' <~ ws)) ~ number
+      def a = (lit(aArr) <~ (ws ~> ':' <~ ws)) ~ number
+      def d = (lit(dArr) <~ (ws ~> ':' <~ ws)) ~ number
+      def c = (lit(cArr) <~ (ws ~> ':' <~ ws)) ~ number
 
-        def weekInfo = ((ws ~> '{' <~ ws) ~>
-          (w ~> (ws ~> ',' <~ ws) ~>
-           a ~> (ws ~> ',' <~ ws) ~>
-           d ~> (ws ~> ',' <~ ws) ~>
-           c) <~
-        (ws ~> '}' <~ ws))
+      def weekInfo = ((ws ~> '{' <~ ws) ~>
+        (w ~> (ws ~> ',' <~ ws) ~>
+         a ~> (ws ~> ',' <~ ws) ~>
+         d ~> (ws ~> ',' <~ ws) ~>
+         c) <~
+      (ws ~> '}' <~ ws))
 
-        def weekInfos =
-         (ws ~> '[' <~ ws) ~> repSepUnit(weekInfo, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
+      def weekInfos =
+       (ws ~> '[' <~ ws) ~> repSepUnit(weekInfo, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
 
-        def manyWeekInfos =
-         (ws ~> '[' <~ ws) ~> repSepUnit(weekInfos, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
+      def manyWeekInfos =
+       (ws ~> '[' <~ ws) ~> repSepUnit(weekInfos, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
 
-        def main = manyWeekInfos
-      }
+      def main = manyWeekInfos
     }
+  }
+
+  /**
+   * kv recognize, but for info on weeks
+   */
+  object KVSchemaKnownRecognizeWeeksADT {
+    /**
+     * very important to hoist out the literals
+     * gains perfs like anything!
+     */
+    val wArr = "\"w\"".toCharArray
+    val aArr = "\"a\"".toCharArray
+    val dArr = "\"d\"".toCharArray
+    val cArr = "\"c\"".toCharArray
+
+    val weeks = "\"weeks\"".toCharArray
+
+    case class WeekInfo(w: String, a: String, d: String, c: String)
+
+    lazy val parser = FastParsersCharArray {
+      def ws = whitespaces
+      def w = (lit(wArr) <~ (ws ~> ':' <~ ws)) ~> number
+      def a = (lit(aArr) <~ (ws ~> ':' <~ ws)) ~> number
+      def d = (lit(dArr) <~ (ws ~> ':' <~ ws)) ~> number
+      def c = (lit(cArr) <~ (ws ~> ':' <~ ws)) ~> number
+
+      def weekInfo: Parser[WeekInfo] = ((ws ~> '{' <~ ws) ~>
+        ((w ~> (ws ~> ',' <~ ws)) ~
+         (a ~> (ws ~> ',' <~ ws)) ~
+         (d ~> (ws ~> ',' <~ ws)) ~
+         c) <~
+      (ws ~> '}' <~ ws)) map {
+        case (((w, a), d), c) => WeekInfo(w.toString, a.toString, d.toString, c.toString)
+      }
+
+      def weekInfos =
+       (ws ~> '[' <~ ws) ~> repsep(weekInfo, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
+
+      def manyWeekInfos =
+       (ws ~> '[' <~ ws) ~> repsep(weekInfos, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
+
+      def main = manyWeekInfos
+    }
+  }
+
+  /**
+   * larger tuple
+   */
+  object KVSchemaKnownRecognizeAuthorInfos {
+
+    val login = "\"login\"".toCharArray
+    val avatar_url = "\"avatar_url\"".toCharArray
+    val gravatar_id = "\"gravatar_id\"".toCharArray
+    val url = "\"url\"".toCharArray
+    val html_url = "\"html_url\"".toCharArray
+    val followers_url = "\"followers_url\"".toCharArray
+    val following_url = "\"following_url\"".toCharArray
+    val gists_url = "\"gists_url\"".toCharArray
+    val starred_url = "\"starred_url\"".toCharArray
+    val subscriptions_url = "\"subscriptions_url\"".toCharArray
+    val organizations_url = "\"organizations_url\"".toCharArray
+    val repos_url = "\"repos_url\"".toCharArray
+    val events_url = "\"events_url\"".toCharArray
+    val received_events_url = "\"received_events_url\"".toCharArray
+    val authortype = "\"type\"".toCharArray
+    val id = "\"id\"".toCharArray
+
+    val site_admin = "\"site_admin\"".toCharArray
+
+
+    val `true` = "true".toCharArray
+    val `false` = "false".toCharArray
+
+    lazy val parser = FastParsersCharArray {
+
+      def ws = skipws
+      def braceOpen = ws ~> '{' ~> ws
+      def braceClose = ws ~> '}' ~> ws
+      def comma = ws ~> ',' ~> ws
+      def colon = ws ~> ':' ~> ws
+
+      def num = number
+      def strLit = stringLitRec
+
+      def loginParser = ws ~> litRec(login) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def avatar_urlParser = ws ~> litRec(avatar_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def gravatar_idParser = ws ~> litRec(gravatar_id) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def urlParser = ws ~> litRec(url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def html_urlParser = ws ~> litRec(html_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def followers_urlParser = ws ~> litRec(followers_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def following_urlParser = ws ~> litRec(following_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def gists_urlParser = ws ~> litRec(gists_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def starred_urlParser = ws ~> litRec(starred_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def subscriptions_urlParser = ws ~> litRec(subscriptions_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def organizations_urlParser = ws ~> litRec(organizations_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def repos_urlParser = ws ~> litRec(repos_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def events_urlParser = ws ~> litRec(events_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def received_events_urlParser = ws ~> litRec(received_events_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def authortypeParser = ws ~> litRec(authortype) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+
+      def idParser = //: Parser[String] =
+        ws ~> litRec(id) ~> colon ~> num ~> ws
+
+      def siteAdmin: Parser[Unit] =
+        ws ~> litRec(site_admin) ~> colon ~> (
+          litRec(`true`) | litRec(`false`)
+        )
+
+      def authorInfo: Parser[Unit] = (braceOpen ~>
+        (loginParser <~ comma) ~>
+        (idParser <~ comma) ~>
+        (avatar_urlParser <~ comma) ~>
+        (gravatar_idParser <~ comma) ~>
+        (urlParser <~ comma) ~>
+        (html_urlParser <~ comma) ~>
+        (followers_urlParser <~ comma) ~>
+        (following_urlParser <~ comma) ~>
+        (gists_urlParser <~ comma) ~>
+        (starred_urlParser <~ comma) ~>
+        (subscriptions_urlParser <~ comma) ~>
+        (organizations_urlParser <~ comma) ~>
+        (repos_urlParser <~ comma) ~>
+        (events_urlParser <~ comma) ~>
+        (received_events_urlParser <~ comma) ~>
+        (authortypeParser <~ comma) ~>
+        (siteAdmin ~> braceClose))
+
+      def authorInfos = ((ws ~> '[' ~> ws) ~>
+        repSepUnit(authorInfo, ws ~> ',' ~> ws) <~
+      (ws ~> ']' ~> ws))
+
+      def main = authorInfos
+    }
+  }
+
+  /**
+   * see when things break down
+   */
+  object KVSchemaKnownRecognizeAuthorPartial {
+
+    val login = "\"login\"".toCharArray
+    val avatar_url = "\"avatar_url\"".toCharArray
+    val gravatar_id = "\"gravatar_id\"".toCharArray
+    //val url = "\"url\"".toCharArray
+    //val html_url = "\"html_url\"".toCharArray
+    //val followers_url = "\"followers_url\"".toCharArray
+    //val following_url = "\"following_url\"".toCharArray
+    //val gists_url = "\"gists_url\"".toCharArray
+    //val starred_url = "\"starred_url\"".toCharArray
+    //val subscriptions_url = "\"subscriptions_url\"".toCharArray
+    //val organizations_url = "\"organizations_url\"".toCharArray
+    //val repos_url = "\"repos_url\"".toCharArray
+    //val events_url = "\"events_url\"".toCharArray
+    //val received_events_url = "\"received_events_url\"".toCharArray
+    //val authortype = "\"type\"".toCharArray
+    val id = "\"id\"".toCharArray
+
+    //val site_admin = "\"site_admin\"".toCharArray
+
+
+    //val `true` = "true".toCharArray
+    //val `false` = "false".toCharArray
+
+    lazy val parser = FastParsersCharArray {
+
+      def ws = skipws
+      def braceOpen = ws ~> '{' ~> ws
+      def braceClose = ws ~> '}' ~> ws
+      def comma = ws ~> ',' ~> ws
+      def colon = ws ~> ':' ~> ws
+
+      def num = number
+      def strLit = stringLitRec
+
+      def loginParser = ws ~> litRec(login) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def avatar_urlParser = ws ~> litRec(avatar_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def gravatar_idParser = ws ~> litRec(gravatar_id) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      //def urlParser = ws ~> litRec(url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      //def html_urlParser = ws ~> litRec(html_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      //def followers_urlParser = ws ~> litRec(followers_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      //def following_urlParser = ws ~> litRec(following_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      //def gists_urlParser = ws ~> litRec(gists_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      //def starred_urlParser = ws ~> litRec(starred_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      //def subscriptions_urlParser = ws ~> litRec(subscriptions_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      //def organizations_urlParser = ws ~> litRec(organizations_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      //def repos_urlParser = ws ~> litRec(repos_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      //def events_urlParser = ws ~> litRec(events_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      //def received_events_urlParser = ws ~> litRec(received_events_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      //def authortypeParser = ws ~> litRec(authortype) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+
+      def idParser = //: Parser[String] =
+        ws ~> litRec(id) ~> colon ~> num ~> ws
+
+      //def siteAdmin: Parser[Unit] =
+      //  ws ~> litRec(site_admin) ~> colon ~> (
+      //    litRec(`true`) | litRec(`false`)
+      //  )
+
+      def authorInfo: Parser[Unit] = (braceOpen ~>
+        (loginParser <~ comma) ~>
+        (idParser <~ comma) ~>
+        (avatar_urlParser <~ comma) ~>
+        (gravatar_idParser <~ braceClose) )//~>
+        //(urlParser <~ comma) ~>
+        //(html_urlParser <~ comma) ~>
+        //(followers_urlParser <~ comma) ~>
+        //(following_urlParser <~ comma) ~>
+        //(gists_urlParser <~ comma) ~>
+        //(starred_urlParser <~ comma) ~>
+        //(subscriptions_urlParser <~ comma) ~>
+        //(organizations_urlParser <~ comma) ~>
+        //(repos_urlParser <~ comma) ~>
+        //(events_urlParser <~ comma) ~>
+        //(received_events_urlParser <~ comma) ~>
+        //(authortypeParser <~ comma) ~>
+        //(siteAdmin ~> braceClose))
+
+      def authorInfos = ((ws ~> '[' ~> ws) ~>
+        repSepUnit(authorInfo, ws ~> ',' ~> ws) <~
+      (ws ~> ']' ~> ws))
+
+      def main = authorInfos
+    }
+  }
 }

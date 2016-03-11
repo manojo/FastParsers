@@ -1,4 +1,4 @@
-package benchmark
+/*package benchmark
 
 import fastparsers.input.InputWindow
 import org.scalameter.api._
@@ -25,7 +25,7 @@ class ContributionsBenchmarkHelper extends BenchmarkHelper {
 class ContributionsAll extends ContributionsBenchmarkHelper {
   include[Contributions]
   include[TotalAuthorOnly]
-  include[ContributionsJSONNoQuery]
+  //include[ContributionsJSONNoQuery]
   include[TotalAuthorOnlySkipWeeks]
   include[TotalAuthorOnlySkipWeeks2]
 }
@@ -54,9 +54,10 @@ class TotalAuthorOnlySkipWeeks2 extends ContributionsBenchmarkHelper {
   }
 }
 
-class ContributionsJSONNoQuery extends ContributionsBenchmarkHelper {
-  import parsers.JsonParsers._
-  performanceOfParsers { f =>
-    runBM(f, "jsonparser", JSonImplBoxed.jsonparser.main)
-  }
-}
+//class ContributionsJSONNoQuery extends ContributionsBenchmarkHelper {
+//  import parsers.JsonParsers._
+//  performanceOfParsers { f =>
+//    runBM(f, "jsonparser", JSonImplBoxed.jsonparser.main)
+//  }
+//}
+*/

@@ -33,18 +33,20 @@ abstract class BenchmarkHelper extends PerformanceTest.OfflineReport {
 
   type Rule = (Array[Char], Int) => ParseResult[Any, _]
 
-  /** every benchmark must provide files to run on */
-  def files: List[Array[Char]]
   def description: String
 
-  lazy val range = Gen.enumeration("size")(files)
+//  lazy val range = Gen.enumeration("size")(files)
 
-  def runBM(f: Array[Char], mName: String, meth: Rule): Unit = {
-    performance of s"$mName" in {
-      measure method mName in {
-        val Success(res) = meth(f, 0)
-        //println(res)
-        res
+  def runBM(g: Gen[List[Array[Char]]], mName: String, meth: Rule): Unit = {
+    measure method mName in {
+      using(g) in { fs =>
+        for (f <- fs) {
+          performance of s"$mName on ${f.size}" in {
+            val Success(res) = meth(f, 0)
+            //println(res)
+            res
+          }
+        }
       }
     }
   }
@@ -52,19 +54,17 @@ abstract class BenchmarkHelper extends PerformanceTest.OfflineReport {
   /**
    * Design inspired by @nicolasstucki
    */
-  def performanceOfParsers(measurer: Array[Char] => Unit): Unit = {
+  def performanceOfParsers(measurer: Gen[List[Array[Char]]] => Unit)
+                          (implicit files: Gen[List[Array[Char]]]): Unit = {
     performance of s"$description" config(
       Key.exec.benchRuns -> benchRuns,
       // Key.verbose -> false,
       Key.exec.independentSamples -> independentSamples,
       //Key.reports.resultDir -> "benchmark_results"
-      Key.exec.jvmflags -> s"-Xms2g -Xmx4g" // "-XX:+UnlockDiagnosticVMOptions -XX:+PrintInlining" "-XX:+PrintCompilation",
+      //-XX:+PrintInlining"
+      Key.exec.jvmflags -> s"-Xms2g -Xmx4g" // -XX:+UnlockDiagnosticVMOptions -XX:+PrintInlining -XX:+PrintCompilation"
     ) in {
-      using(range) in { fs =>
-        for (f <- fs) {
-          measurer(f)
-        }
-      }
+      measurer(files)
     }
   }
 }

@@ -1,4 +1,4 @@
-package benchmark
+/*package benchmark
 
 import fastparsers.input.InputWindow
 import org.scalameter.api._
@@ -134,3 +134,4 @@ class JSONStringLit extends StringLitBenchmarkHelper {
     runBM(f, "jsonStringLiterals", JSonImplBoxed.jsonparser.value)
   }
 }
+*/

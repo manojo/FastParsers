@@ -84,7 +84,7 @@ object JsonParsers {
     import fastparsers.framework.implementations.FastParsersCharArray._
 
     sealed abstract class JSValue
-    case class JSObject(map: Map[String, JSValue]) extends JSValue
+    case class JSObject(map: List[(String, JSValue)]) extends JSValue
     case class JSArray(arr: List[JSValue]) extends JSValue
     //case class JSDouble(d: InputWindow[Array[Char]]) extends JSValue
     case class JSDouble2(d: String) extends JSValue
@@ -112,16 +112,16 @@ object JsonParsers {
          lit(trueValue) ^^^ JSBool(true) |
          lit(falseValue) ^^^ JSBool(false)
        )
-      def obj:Parser[JSValue] = ('{' ~> repsep(member,comma) <~ closeBracket) ^^ {x => JSObject(x.toMap)}
+      def obj:Parser[JSValue] = ('{' ~> repsep(member,comma) <~ closeBracket) ^^ {x => JSObject(x)}
       def arr:Parser[JSValue] = ('[' ~> repsep(value,comma) <~ closeSBracket) ^^ {x => JSArray(x)}
       def member:Parser[(String, JSValue)] = (stringLit map (_.toString)) ~ (lit(points) ~> value)
-      def authTotal = value map {
-        case JSArray(ls) => for (JSObject(mp) <- ls) yield {
-          val JSObject(mp2) = mp("author")
-          (mp("total"), mp2("id"))
-        }
-      }
-      def main = authTotal
+      //def authTotal = value map {
+      //  case JSArray(ls) => for (JSObject(mp) <- ls) yield {
+      //    val JSObject(mp2) = mp("author")
+      //    (mp("total"), mp2("id"))
+      //  }
+      //}
+      //def main = authTotal
     }
 
   }
