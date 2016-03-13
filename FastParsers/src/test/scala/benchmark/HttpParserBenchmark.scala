@@ -22,12 +22,14 @@ object HttpParserBenchmark extends PerformanceTest {
 
   val range = Gen.enumeration("size")(10)
 
+  /*
   val files = (1 to 100).foldLeft(new ListBuffer[(Array[Char], String, FastCharSequence)]){ (acc,i) =>
     val fileName = "FastParsers/src/test/resources/tweet" + i + "ho"
     val data = scala.io.Source.fromFile(fileName).getLines mkString "\n"
     acc += ((data.toCharArray,data, new FastCharSequence(data.toCharArray)))
     acc
   }.toList
+  */
 
   //println(files.mkString.size)
 

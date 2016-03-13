@@ -19,6 +19,7 @@ object WikiParserBenchmark extends PerformanceTest {
 
   val range = Gen.enumeration("size")(10)
 
+  /*
   val smallFileName = "FastParsers/src/test/resources/wiki/smaller.xml"
   val smallFile = scala.io.Source.fromFile(smallFileName).getLines mkString "\n"
   val smallFileArray = smallFile.toCharArray
@@ -58,6 +59,7 @@ object WikiParserBenchmark extends PerformanceTest {
           <sha1>0uwuuhiam59ufbu0uzt9lookwtx9f4r</sha1>
         </revision>
       </page>"""
+  */
 
 //  fullWikiParser.relevantInfos(vbigFileArray) match {
 //    case Success(result) => println("success kid "  + result.size)
