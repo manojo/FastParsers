@@ -6,18 +6,14 @@ import org.scalameter.api._
 import org.scalameter.Key
 
 
-abstract class BenchmarkRun extends Microbenchmark {
-  override def aggregator = Aggregator.average
-}
+abstract class BenchmarkRun extends OfflineRegressionReport
 
-abstract class BenchmarkHelper extends Microbenchmark {
-  override def aggregator = Aggregator.average
-
+abstract class BenchmarkHelper extends OfflineRegressionReport {
   def independentSamples = 1
   def benchRunsPerSample = 128
   def benchRuns = independentSamples * benchRunsPerSample
 
-  def memoryInHeap = "8g"
+  def memoryInHeap = "4g"
 
   type Rule = (Array[Char], Int) => ParseResult[Any, _]
 
@@ -28,8 +24,8 @@ abstract class BenchmarkHelper extends Microbenchmark {
       using(g) in { fs =>
         for (f <- fs) {
           performance of s"$mName on ${f.size}" in {
-            val Success(res) = meth(f, 0)
-            res
+            meth(f, 0)
+            ()
           }
         }
       }
