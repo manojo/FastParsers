@@ -10,7 +10,7 @@ import parsers.KVParsers._
 
 object KeyValueFiles {
   lazy val fileArrays = List("kvpairs.txt") map { (f: String) =>
-    val fileName = "src/test/resources/micro/" + f
+    val fileName = "FastParsers/src/test/resources/micro/" + f
     val file = scala.io.Source.fromFile(fileName).getLines mkString "\n"
     val fileArray = file.toCharArray
     fileArray
@@ -237,7 +237,7 @@ class KeyValueJSON extends KeyValueBenchmarkHelper {
 /************ WEEKS ***********/
 object WeeksFiles {
   lazy val fileArrays = List("weeks.txt") map { (f: String) =>
-    val fileName = "src/test/resources/micro/" + f
+    val fileName = "FastParsers/src/test/resources/micro/" + f
     val file = scala.io.Source.fromFile(fileName).getLines mkString "\n"
     val fileArray = file.toCharArray
     fileArray
@@ -282,7 +282,7 @@ class KeyValueSchemaKnownRecognizeWeeksADT extends WeeksBenchmarkHelper {
 object AuthorInfoFiles {
   val fileArrays = List("authorinfos-480.txt") map { (f: String) =>
     // As we fork any test in the build, this is relative to the project
-    val fileName = s"src/test/resources/micro/$f"
+    val fileName = s"FastParsers/src/test/resources/micro/$f"
     val channel = new RandomAccessFile(fileName, "r").getChannel
     val buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size)
     val charBuffer = StandardCharsets.ISO_8859_1.decode(buffer)
@@ -322,7 +322,7 @@ class KeyValueJSONAuthorInfos extends AuthorInfosBenchmarkHelper {
 /********** AUTHORINFOSPartial ********/
 object AuthorPartialFiles {
   lazy val fileArrays = List("authorpartial.txt") map { (f: String) =>
-    val fileName = "src/test/resources/micro/" + f
+    val fileName = "FastParsers/src/test/resources/micro/" + f
     val file = scala.io.Source.fromFile(fileName).getLines mkString "\n"
     val fileArray = file.toCharArray
     fileArray

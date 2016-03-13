@@ -3,6 +3,7 @@ import Keys._
 
 object FastParsersBuild extends Build {
 	import PublishSettings._
+	scalaVersion := "2.11.7"
 
   def commonSettings = Seq(
     version := "0.1-SNAPSHOT",
@@ -45,9 +46,6 @@ object FastParsersBuild extends Build {
       ),
 
   		testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
-			fork := true,
-      parallelExecution in Test := false,
-			javaOptions in run += "-Xmx8G -Xms4G",
       logBuffered := false
   	)
   )
