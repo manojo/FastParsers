@@ -1,5 +1,8 @@
 package benchmark
 
+import java.io.RandomAccessFile
+import java.nio.channels.FileChannel
+
 import fastparsers.input.InputWindow
 import org.scalameter.api._
 import fastparsers.framework.parseresult.{ParseResult, Success, Failure}
@@ -9,13 +12,13 @@ import InputWindow._
 import parsers.KVParsers._
 
 object KeyValueFiles {
-  val fileArrays = List("kvpairs.txt") map { (f: String) =>
+  lazy val fileArrays = List("kvpairs.txt") map { (f: String) =>
     val fileName = "FastParsers/src/test/resources/micro/" + f
     val file = scala.io.Source.fromFile(fileName).getLines mkString "\n"
     val fileArray = file.toCharArray
     fileArray
   }
-  implicit val range = Gen.enumeration("size")(fileArrays)
+  implicit val range = Gen.enumeration("size")(List.empty[Array[Char]])
 }
 
 class KeyValueBenchmarkHelper extends BenchmarkHelper {
@@ -236,13 +239,13 @@ class KeyValueJSON extends KeyValueBenchmarkHelper {
 
 /************ WEEKS ***********/
 object WeeksFiles {
-  val fileArrays = List("weeks.txt") map { (f: String) =>
+  lazy val fileArrays = List("weeks.txt") map { (f: String) =>
     val fileName = "FastParsers/src/test/resources/micro/" + f
     val file = scala.io.Source.fromFile(fileName).getLines mkString "\n"
     val fileArray = file.toCharArray
     fileArray
   }
-  implicit val range = Gen.enumeration("size")(fileArrays)
+  implicit val range = Gen.enumeration("size")(List.empty[Array[Char]])
 }
 
 class WeeksBenchmarkHelper extends BenchmarkHelper {
@@ -280,14 +283,14 @@ class KeyValueSchemaKnownRecognizeWeeksADT extends WeeksBenchmarkHelper {
 
 /********** AUTHORINFOS ********/
 object AuthorInfoFiles {
-  val fileArrays = List(
-      //"authorinfos.txt",
-      //"authorinfos-larger.txt"//,
-      "authorinfos-largerer.txt") map { (f: String) =>
+  val fileArrays = List("authorinfos-240.txt") map { (f: String) =>
     val fileName = "FastParsers/src/test/resources/micro/" + f
-    val file = scala.io.Source.fromFile(fileName).getLines mkString "\n"
-    val fileArray = file.toCharArray
-    fileArray
+    println("we';re here")
+    val channel = new RandomAccessFile(fileName, "r").getChannel
+    val buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size())
+    val contents = buffer.asCharBuffer.array
+    channel.close
+    contents
   }
   implicit val range = Gen.enumeration("size")(fileArrays)
 }
@@ -318,13 +321,13 @@ class KeyValueJSONAuthorInfos extends AuthorInfosBenchmarkHelper {
 
 /********** AUTHORINFOSPartial ********/
 object AuthorPartialFiles {
-  val fileArrays = List("authorpartial.txt") map { (f: String) =>
+  lazy val fileArrays = List("authorpartial.txt") map { (f: String) =>
     val fileName = "FastParsers/src/test/resources/micro/" + f
     val file = scala.io.Source.fromFile(fileName).getLines mkString "\n"
     val fileArray = file.toCharArray
     fileArray
   }
-  implicit val range = Gen.enumeration("size")(fileArrays)
+  implicit val range = Gen.enumeration("size")(List.empty[Array[Char]])
 }
 
 class AuthorPartialBenchmarkHelper extends BenchmarkHelper {

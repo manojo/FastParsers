@@ -20,9 +20,9 @@ object ParsersMixinBenchmark extends PerformanceTest {
   val range = Gen.enumeration("size")(10)
 
 
-  val bigFileName = "FastParsers/src/test/resources/json.big1"
-  val bigFile = scala.io.Source.fromFile(bigFileName).getLines mkString "\n"
-  val bigFileArray = bigFile.toCharArray
+  //val bigFileName = "FastParsers/src/test/resources/json.big1"
+  //val bigFile = scala.io.Source.fromFile(bigFileName).getLines mkString "\n"
+  //val bigFileArray = bigFile.toCharArray
 
   /*performance of "JsonParser:@FastParsers" in {
     measure method "value" in {

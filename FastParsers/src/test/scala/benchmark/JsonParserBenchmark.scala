@@ -23,6 +23,7 @@ object JsonParserBenchmark extends PerformanceTest {
 
   val range = Gen.enumeration("size")(10)
 
+/*
   val files = (1 to 4).foldLeft(new ListBuffer[Array[Char]]){ (acc,i) =>
     val filename = "FastParsers/src/test/resources/json" + i
     val data = scala.io.Source.fromFile(filename).getLines mkString "\n"
@@ -41,7 +42,7 @@ object JsonParserBenchmark extends PerformanceTest {
   val vbigFileSeq = new FastCharSequence(vbigFileArray)
 
   val fastparse.all.Parsed.Success(resAll, _) = FastParseJSON.jsonExpr.parse(bigFile)
-/*
+
   performance of "JsonParser on small inputs" in {
 
     measure method "FastParsers" in {
@@ -65,7 +66,6 @@ object JsonParserBenchmark extends PerformanceTest {
       }
     }*/
   }
-*/
 
   performance of "JsonParser on a big input" in {
     measure method "FastParsers" in {
@@ -196,5 +196,6 @@ object JsonParserBenchmark extends PerformanceTest {
     }*/
 
   }
+*/
 */
 }
