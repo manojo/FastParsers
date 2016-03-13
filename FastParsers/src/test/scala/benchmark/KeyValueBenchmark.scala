@@ -302,7 +302,7 @@ class AuthorInfosBenchmarkHelper extends BenchmarkHelper {
   val description = "authorinfos"
 }
 
-class KeyValueAuthorAll extends AuthorInfosBenchmarkHelper {
+class KeyValueAuthorAll extends BenchmarkRun {
   include[KeyValueSchemaKnownRecognizeAuthorInfos]
   include[KeyValueJSONAuthorInfos]
 }
@@ -337,7 +337,7 @@ class AuthorPartialBenchmarkHelper extends BenchmarkHelper {
   val description = "authorpartial"
 }
 
-class KeyValueAuthorPartialAll extends AuthorInfosBenchmarkHelper {
+class KeyValueAuthorPartialAll extends BenchmarkRun {
   include[KeyValueSchemaKnownRecognizeAuthorPartial]
   include[KeyValueJSONAuthorPartial]
 }
