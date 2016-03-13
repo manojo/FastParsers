@@ -1,17 +1,14 @@
 package benchmark
 
-import fastparsers.framework.parseresult.{ParseResult, Success, Failure}
-import fastparsers.input.InputWindow
-import org.scalameter.PerformanceTest.{OfflineReport, OfflineRegressionReport}
+import fastparsers.framework.parseresult.{ParseResult, Success}
+import org.scalameter.PerformanceTest.{Microbenchmark, OfflineRegressionReport}
 import org.scalameter.api._
 import org.scalameter.Key
 
 
-abstract class BenchmarkRun extends OfflineReport {
-  override def reporter = new Reporter.Composite(CSVReporter, super.reporter)
-}
+abstract class BenchmarkRun extends Microbenchmark
 
-abstract class BenchmarkHelper extends OfflineRegressionReport {
+abstract class BenchmarkHelper extends Microbenchmark {
 
   def independentSamples = 1
   def benchRunsPerSample = 128
@@ -36,9 +33,6 @@ abstract class BenchmarkHelper extends OfflineRegressionReport {
     }
   }
 
-  /**
-   * Design inspired by @nicolasstucki
-   */
   def performanceOfParsers(measurer: Gen[List[Array[Char]]] => Unit)
                           (implicit files: Gen[List[Array[Char]]]): Unit = {
     performance of s"$description" config(
