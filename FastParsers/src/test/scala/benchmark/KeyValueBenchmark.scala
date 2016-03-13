@@ -280,7 +280,7 @@ class KeyValueSchemaKnownRecognizeWeeksADT extends WeeksBenchmarkHelper {
 
 /********** AUTHORINFOS ********/
 object AuthorInfoFiles {
-  val fileArrays = List("authorinfos-240.txt") map { (f: String) =>
+  val fileArrays = List("authorinfos-480.txt") map { (f: String) =>
     // As we fork any test in the build, this is relative to the project
     val fileName = s"src/test/resources/micro/$f"
     val channel = new RandomAccessFile(fileName, "r").getChannel
