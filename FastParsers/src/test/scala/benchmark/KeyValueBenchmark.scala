@@ -6,15 +6,11 @@ import java.nio.charset.StandardCharsets
 
 import fastparsers.input.InputWindow
 import org.scalameter.api._
-import fastparsers.framework.parseresult.{ParseResult, Success, Failure}
-import fastparsers.parsers.Parser
-
-import InputWindow._
 import parsers.KVParsers._
 
 object KeyValueFiles {
   lazy val fileArrays = List("kvpairs.txt") map { (f: String) =>
-    val fileName = "FastParsers/src/test/resources/micro/" + f
+    val fileName = "src/test/resources/micro/" + f
     val file = scala.io.Source.fromFile(fileName).getLines mkString "\n"
     val fileArray = file.toCharArray
     fileArray
@@ -26,7 +22,7 @@ class KeyValueBenchmarkHelper extends BenchmarkHelper {
   val description = "key-value pairs"
 }
 
-class KeyValueAll extends KeyValueBenchmarkHelper {
+class KeyValueAll extends BenchmarkRun {
   include[KeyValueMapEarly]
   include[KeyValueMapAtPairTime]
   include[KeyValueMapAtInnerListTime]
@@ -241,7 +237,7 @@ class KeyValueJSON extends KeyValueBenchmarkHelper {
 /************ WEEKS ***********/
 object WeeksFiles {
   lazy val fileArrays = List("weeks.txt") map { (f: String) =>
-    val fileName = "FastParsers/src/test/resources/micro/" + f
+    val fileName = "src/test/resources/micro/" + f
     val file = scala.io.Source.fromFile(fileName).getLines mkString "\n"
     val fileArray = file.toCharArray
     fileArray
@@ -285,10 +281,10 @@ class KeyValueSchemaKnownRecognizeWeeksADT extends WeeksBenchmarkHelper {
 /********** AUTHORINFOS ********/
 object AuthorInfoFiles {
   val fileArrays = List("authorinfos-240.txt") map { (f: String) =>
-    val fileName = "FastParsers/src/test/resources/micro/" + f
-    println("we';re here")
+    // As we fork any test in the build, this is relative to the project
+    val fileName = s"src/test/resources/micro/$f"
     val channel = new RandomAccessFile(fileName, "r").getChannel
-    val buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size())
+    val buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size)
     val charBuffer = StandardCharsets.ISO_8859_1.decode(buffer)
     val array = Array.ofDim[Char](charBuffer.remaining)
     val contents = charBuffer.get(array)
@@ -310,7 +306,8 @@ class KeyValueAuthorAll extends BenchmarkRun {
 class KeyValueSchemaKnownRecognizeAuthorInfos extends AuthorInfosBenchmarkHelper {
   import AuthorInfoFiles._
   performanceOfParsers { f =>
-    runBM(f, "schemaKnownRecognizeAuthorInfos", KVSchemaKnownRecognizeAuthorInfos.parser.main)
+    runBM(f, "schemaKnownRecognizeAuthorInfos",
+      KVSchemaKnownRecognizeAuthorInfos.parser.main)
   }
 }
 
@@ -325,7 +322,7 @@ class KeyValueJSONAuthorInfos extends AuthorInfosBenchmarkHelper {
 /********** AUTHORINFOSPartial ********/
 object AuthorPartialFiles {
   lazy val fileArrays = List("authorpartial.txt") map { (f: String) =>
-    val fileName = "FastParsers/src/test/resources/micro/" + f
+    val fileName = "src/test/resources/micro/" + f
     val file = scala.io.Source.fromFile(fileName).getLines mkString "\n"
     val fileArray = file.toCharArray
     fileArray

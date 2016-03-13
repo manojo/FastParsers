@@ -6,14 +6,10 @@ import java.util.Calendar
 import org.scalameter._
 import org.scalameter.utils.Tree
 
-import scala.collection._
-
-/**
- * Created by nicolasstucki on 02/02/15.
- */
+/** Greatly inspired by nicolasstucki. */
 object CSVReporter extends Reporter {
 
-    def report(result: CurveData, persistor: Persistor) {}
+    def report(result: CurveData, persistor: Persistor): Unit = ()
 
     def report(results: Tree[CurveData], persistor: Persistor) = {
         val times = scala.collection.mutable.Map.empty[(List[(String, Any)], String), String]
@@ -24,7 +20,11 @@ object CSVReporter extends Reporter {
 
         for (result <- results) {
             for (measurement <- result.measurements) {
-                val scopeFile = result.context.scope.replace(result.context.curve, "").replace("benchmarks (-Xms16g -Xmx16g)", "").replaceAll("Height [0-9]", "") + " "
+                val scopeFile = result.context.scope
+                  .replace(result.context.curve, "")
+                  // TODO Change these embedded java options
+                  .replace("benchmarks (-Xms16g -Xmx16g)", "")
+                  .replaceAll("Height [0-9]", "") + " "
                 val scopeName = scopeFile + result.context.curve
 
                 val _params = measurement.params.axisData.toList
@@ -49,12 +49,16 @@ object CSVReporter extends Reporter {
         }
         for (scopeFile <- scopeFiles) {
             val sb = new StringBuilder()
-            //            sb ++= ", " ++= scopes.toList.filter(_.startsWith(scopeFile)).map(scope => scope.replace(curves(scope), "")).mkString("", ", ", "\n")
-
-            sb ++= params.head.map(_._1).mkString(", ") ++= ", " ++= scopes.iterator.filter(_.startsWith(scopeFile)).map(curves(_).replace("[Int]", " ")).mkString("", ", ", "\n")
-            for (param <- params.toList.sortBy(_.map(a => Integer.parseInt(a._2.toString)))) {
+            sb ++= params.head.map(_._1).mkString(", ") ++= ", "++=
+              scopes.iterator.filter(_.startsWith(scopeFile)).map(curves(_)
+                .replace("[Int]", " ")).mkString("", ", ", "\n")
+            for (param <- params.toList.sortBy(_.map {
+                a => Integer.parseInt(a._2.toString)
+              })) {
                 sb ++= param.map(_._2).mkString(", ")
-                sb ++= scopes.iterator.filter(_.startsWith(scopeFile)).map(scope => times.getOrElse((param, scope), "")).fold("")((a, b) => s"$a, $b") += '\n'
+                sb ++= scopes.iterator.filter(_.startsWith(scopeFile))
+                  .map(scope => times.getOrElse((param, scope), ""))
+                  .fold("")((a, b) => s"$a, $b") += '\n'
             }
 
             import java.io._
