@@ -6,9 +6,12 @@ import org.scalameter.api._
 import org.scalameter.Key
 
 
-abstract class BenchmarkRun extends Microbenchmark
+abstract class BenchmarkRun extends Microbenchmark {
+  override def aggregator = Aggregator.average
+}
 
 abstract class BenchmarkHelper extends Microbenchmark {
+  override def aggregator = Aggregator.average
 
   def independentSamples = 1
   def benchRunsPerSample = 128
