@@ -2,6 +2,7 @@ package benchmark
 
 import java.io.RandomAccessFile
 import java.nio.channels.FileChannel
+import java.nio.charset.StandardCharsets
 
 import fastparsers.input.InputWindow
 import org.scalameter.api._
@@ -288,7 +289,7 @@ object AuthorInfoFiles {
     println("we';re here")
     val channel = new RandomAccessFile(fileName, "r").getChannel
     val buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size())
-    val charBuffer = buffer.asCharBuffer
+    val charBuffer = StandardCharsets.ISO_8859_1.decode(buffer)
     val array = Array.ofDim[Char](charBuffer.remaining)
     val contents = charBuffer.get(array)
     channel.close
