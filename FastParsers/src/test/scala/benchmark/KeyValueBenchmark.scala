@@ -288,9 +288,11 @@ object AuthorInfoFiles {
     println("we';re here")
     val channel = new RandomAccessFile(fileName, "r").getChannel
     val buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size())
-    val contents = buffer.asCharBuffer.array
+    val charBuffer = buffer.asCharBuffer
+    val array = Array.ofDim[Char](charBuffer.remaining)
+    val contents = charBuffer.get(array)
     channel.close
-    contents
+    array
   }
   implicit val range = Gen.enumeration("size")(fileArrays)
 }
