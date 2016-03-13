@@ -9,34 +9,17 @@ import util.FastCharSequence
 
 abstract class BenchmarkHelper extends PerformanceTest.OfflineReport {
 
-  //override def reporter = new Reporter.Composite(CSVReporter, super.reporter)
-  //lazy val executor = LocalExecutor(
-  //  new Executor.Warmer.Default,
-  //  Aggregator.average,
-  //  new Measurer.Default)
+  override def reporter = new Reporter.Composite(CSVReporter, super.reporter)
 
-  //lazy val reporter = new LoggingReporter
-  //lazy val reporter = Reporter.Composite(
-  //  new RegressionReporter(
-  //    RegressionReporter.Tester.OverlapIntervals(),
-  //    RegressionReporter.Historian.ExponentialBackoff() ),
-  //  HtmlReporter(true)
-  //)
-
-  //lazy val persistor = Persistor.None
-
-
-  def independentSamples = 1 //16
+  def independentSamples = 1
   def benchRunsPerSample = 128
   def benchRuns = independentSamples * benchRunsPerSample
 
-  def memoryInHeapSeq = Seq("16g")
+  def memoryInHeap = "8g"
 
   type Rule = (Array[Char], Int) => ParseResult[Any, _]
 
   def description: String
-
-//  lazy val range = Gen.enumeration("size")(files)
 
   def runBM(g: Gen[List[Array[Char]]], mName: String, meth: Rule): Unit = {
     measure method mName in {
@@ -44,7 +27,6 @@ abstract class BenchmarkHelper extends PerformanceTest.OfflineReport {
         for (f <- fs) {
           performance of s"$mName on ${f.size}" in {
             val Success(res) = meth(f, 0)
-            //println(res)
             res
           }
         }
@@ -62,8 +44,8 @@ abstract class BenchmarkHelper extends PerformanceTest.OfflineReport {
       // Key.verbose -> false,
       Key.exec.independentSamples -> independentSamples,
       //Key.reports.resultDir -> "benchmark_results"
-      //-XX:+PrintInlining"
-      Key.exec.jvmflags -> s"-Xms2g -Xmx4g" // -XX:+UnlockDiagnosticVMOptions -XX:+PrintInlining -XX:+PrintCompilation"
+      Key.exec.jvmflags -> s"-Xms$memoryInHeap -Xmx$memoryInHeap"
+      // -XX:+UnlockDiagnosticVMOptions -XX:+PrintInlining -XX:+PrintCompilation"
     ) in {
       measurer(files)
     }
