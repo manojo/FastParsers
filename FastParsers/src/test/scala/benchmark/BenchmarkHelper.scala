@@ -2,14 +2,16 @@ package benchmark
 
 import fastparsers.framework.parseresult.{ParseResult, Success, Failure}
 import fastparsers.input.InputWindow
+import org.scalameter.PerformanceTest.{OfflineReport, OfflineRegressionReport}
 import org.scalameter.api._
 import org.scalameter.Key
-import InputWindow._
-import util.FastCharSequence
 
-abstract class BenchmarkHelper extends PerformanceTest.OfflineReport {
 
+abstract class BenchmarkRun extends OfflineReport {
   override def reporter = new Reporter.Composite(CSVReporter, super.reporter)
+}
+
+abstract class BenchmarkHelper extends OfflineRegressionReport {
 
   def independentSamples = 1
   def benchRunsPerSample = 128

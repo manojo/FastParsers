@@ -6,7 +6,7 @@ object FastParsersBuild extends Build {
 
   def commonSettings = Seq(
     version := "0.1-SNAPSHOT",
-	  scalaVersion := "2.11.7" ,
+	  scalaVersion := "2.11.7",
     //scalacOptions := Seq("-optimize"), // <-- slows down compilation drastically
 	  libraryDependencies ++=  Seq(
 		  "org.scala-lang" % "scala-compiler"  % scalaVersion.value % "provided",
@@ -39,12 +39,15 @@ object FastParsersBuild extends Build {
   		libraryDependencies ++= Seq(
         "org.scalatest" %% "scalatest" % "3.0.0-M15" % "test",
         "org.scalacheck" %% "scalacheck" % "1.11.5" % "test",
-        "com.storm-enroute" % "scalameter_2.11" % "0.6" % "test",
+        "com.storm-enroute" %% "scalameter" % "0.6" % "test",
         "com.lihaoyi" %% "pprint" % "0.3.8",
         "com.lihaoyi" %% "fastparse" % "0.3.4"
       ),
 
   		testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
+			fork := true,
+      parallelExecution in Test := false,
+			javaOptions in run += "-Xmx8G -Xms4G",
       logBuffered := false
   	)
   )
