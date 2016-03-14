@@ -2,7 +2,6 @@ package benchmark
 
 import parsers.JsonParsers._
 import org.scalameter.api._
-import org.scalameter.PerformanceTest
 import org.scalameter.reporting.LoggingReporter
 
 /**

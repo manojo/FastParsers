@@ -12,6 +12,7 @@ import lms._
 import InputWindow._
 import util.FastCharSequence
 
+/*
 object JsonParserBenchmark extends PerformanceTest {
 
   lazy val executor = LocalExecutor(
@@ -23,7 +24,6 @@ object JsonParserBenchmark extends PerformanceTest {
 
   val range = Gen.enumeration("size")(10)
 
-/*
   val files = (1 to 4).foldLeft(new ListBuffer[Array[Char]]){ (acc,i) =>
     val filename = "FastParsers/src/test/resources/json" + i
     val data = scala.io.Source.fromFile(filename).getLines mkString "\n"
@@ -197,5 +197,5 @@ object JsonParserBenchmark extends PerformanceTest {
 
   }
 */
-*/
 }
+*/

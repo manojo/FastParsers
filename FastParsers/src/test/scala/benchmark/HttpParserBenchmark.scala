@@ -7,6 +7,7 @@ import scala.collection.mutable.ListBuffer
 import lms._
 import util.FastCharSequence
 
+/*
 object HttpParserBenchmark extends PerformanceTest {
 
   /* configuration */
@@ -93,3 +94,4 @@ object HttpParserBenchmark extends PerformanceTest {
 
 
 }
+*/

@@ -3,15 +3,17 @@ package benchmark
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
+import org.scalameter.CurveData
 import org.scalameter._
 import org.scalameter.utils.Tree
 
 /** Greatly inspired by nicolasstucki. */
-object CSVReporter extends Reporter {
+/*
+object CSVReporter extends Reporter[Double] {
 
-    def report(result: CurveData, persistor: Persistor): Unit = ()
+    def report(result: CurveData[Double], persistor: Persistor): Unit = ()
 
-    def report(results: Tree[CurveData], persistor: Persistor) = {
+    def report(results: Tree[CurveData[Double]], persistor: Persistor) = {
         val times = scala.collection.mutable.Map.empty[(List[(String, Any)], String), String]
         val curves = scala.collection.mutable.Map.empty[String, String]
         val scopes = scala.collection.mutable.SortedSet.empty[String]
@@ -74,3 +76,4 @@ object CSVReporter extends Reporter {
         true
     }
 }
+*/
