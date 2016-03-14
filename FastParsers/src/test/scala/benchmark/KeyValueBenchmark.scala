@@ -14,12 +14,13 @@ import scala.collection.mutable
 trait AuthorInfoReader {
   type Files = List[Array[Char]]
 
-  def readFile(filename: String): Array[Char] = {
+  final def readFile(filename: String): Array[Char] = {
     val fileName = s"FastParsers/src/test/resources/micro/$filename"
     val channel = new RandomAccessFile(fileName, "r").getChannel
-    val buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size)
+    val buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size).force()
     val contents = StandardCharsets.ISO_8859_1.decode(buffer).array
     channel.close
+    println("File contents have been read")
     contents
   }
 
@@ -301,14 +302,14 @@ class KeyValueSchemaKnownRecognizeWeeksADT extends WeeksBenchmarkHelper {
 
 
 object AuthorInfoFiles extends AuthorInfoReader {
-  lazy val fileNames = List("authorinfos-480.txt")
-  lazy val fileArrays = fileNames map readFile
+  val fileNames = List("authorinfos-480.txt")
+  val fileArrays = fileNames map readFile
 
-  implicit lazy val filesGen: Gen[String] = Gen.single("files")(fileNames.head)
+  implicit val filesGen: Gen[String] = Gen.single("files")(fileNames.head)
 }
 
 trait AuthorInfosBenchmark extends BasicBenchmark {
-  lazy val data = AuthorInfoFiles.fileArrays.head
+  val data = AuthorInfoFiles.fileArrays.head
   val description = "authorinfos"
 }
 
