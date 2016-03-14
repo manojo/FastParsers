@@ -307,7 +307,7 @@ object AuthorInfoFiles extends AuthorInfoReader {
   implicit lazy val filesGen: Gen[String] = Gen.single("files")(fileNames.head)
 }
 
-trait AuthorInfosBenchmarkHelper extends BenchmarkHelper {
+trait AuthorInfosBenchmark extends BasicBenchmark {
   lazy val data = AuthorInfoFiles.fileArrays.head
   val description = "authorinfos"
 }
@@ -326,7 +326,7 @@ class KeyValueAuthorAll extends Bench.Group {
   }
 }
 
-trait KeyValueSchemaKnownRecognizeAuthorInfos extends AuthorInfosBenchmarkHelper {
+trait KeyValueSchemaKnownRecognizeAuthorInfos extends AuthorInfosBenchmark {
   import AuthorInfoFiles.filesGen
   performanceOfParsers { (gfiles: Gen[String]) =>
     runBM(gfiles, "schemaKnownRecognizeAuthorInfos",
@@ -334,7 +334,7 @@ trait KeyValueSchemaKnownRecognizeAuthorInfos extends AuthorInfosBenchmarkHelper
   }(filesGen)
 }
 
-trait KeyValueJSONAuthorInfos extends AuthorInfosBenchmarkHelper {
+trait KeyValueJSONAuthorInfos extends AuthorInfosBenchmark {
   import AuthorInfoFiles.filesGen
   import parsers.JsonParsers._
   performanceOfParsers { (gfiles: Gen[String]) =>
