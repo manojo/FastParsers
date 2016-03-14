@@ -8,6 +8,7 @@ import org.scalameter.reporting.LoggingReporter
 /**
  * Created by Eric on 12.05.14.
  */
+/*
 object ParsersMixinBenchmark extends PerformanceTest {
 
   lazy val executor = LocalExecutor(
@@ -70,3 +71,5 @@ object ParsersMixinBenchmark extends PerformanceTest {
   }*/
 
 }
+*/
+

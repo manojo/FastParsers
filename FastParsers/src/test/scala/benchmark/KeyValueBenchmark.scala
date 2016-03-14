@@ -5,9 +5,11 @@ import java.nio.channels.FileChannel
 import java.nio.charset.StandardCharsets
 
 import fastparsers.input.InputWindow
+import org.scalameter.api
 import org.scalameter.api._
 import parsers.KVParsers._
 
+/*
 object KeyValueFiles {
   lazy val fileArrays = List("kvpairs.txt") map { (f: String) =>
     val fileName = "FastParsers/src/test/resources/micro/" + f
@@ -277,24 +279,27 @@ class KeyValueSchemaKnownRecognizeWeeksADT extends WeeksBenchmarkHelper {
     runBM(f, "schemaKnownRecognizeWeeksADT", KVSchemaKnownRecognizeWeeksADT.parser.main)
   }
 }
+*/
 
 /********** AUTHORINFOS ********/
 object AuthorInfoFiles {
-  val fileArrays = List("authorinfos-480.txt") map { (f: String) =>
+  lazy val fileArrays = List("authorinfos-240.txt") map { (f: String) =>
     // As we fork any test in the build, this is relative to the project
     val fileName = s"FastParsers/src/test/resources/micro/$f"
     val channel = new RandomAccessFile(fileName, "r").getChannel
     val buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size)
     val charBuffer = StandardCharsets.ISO_8859_1.decode(buffer)
+    println(s"Get array ${charBuffer.hasArray}")
     val array = Array.ofDim[Char](charBuffer.remaining)
     val contents = charBuffer.get(array)
     channel.close
     array
   }
-  implicit val range = Gen.enumeration("size")(fileArrays)
+  implicit val range: Gen[List[Int]] = Gen.single("size")(List(1))
 }
 
-class AuthorInfosBenchmarkHelper extends BenchmarkHelper {
+abstract class AuthorInfosBenchmarkHelper extends BenchmarkHelper {
+  lazy val data = AuthorInfoFiles.fileArrays.head
   val description = "authorinfos"
 }
 
@@ -305,8 +310,8 @@ class KeyValueAuthorAll extends BenchmarkRun {
 
 class KeyValueSchemaKnownRecognizeAuthorInfos extends AuthorInfosBenchmarkHelper {
   import AuthorInfoFiles._
-  performanceOfParsers { f =>
-    runBM(f, "schemaKnownRecognizeAuthorInfos",
+  performanceOfParsers { i =>
+    runBM(i, "schemaKnownRecognizeAuthorInfos",
       KVSchemaKnownRecognizeAuthorInfos.parser.main)
   }
 }
@@ -314,10 +319,11 @@ class KeyValueSchemaKnownRecognizeAuthorInfos extends AuthorInfosBenchmarkHelper
 class KeyValueJSONAuthorInfos extends AuthorInfosBenchmarkHelper {
   import AuthorInfoFiles._
   import parsers.JsonParsers._
-  performanceOfParsers { f =>
-    runBM(f, "jsonparser", JSonImplBoxed.jsonparser.value)
+  performanceOfParsers { i =>
+    runBM(i, "jsonparser", JSonImplBoxed.jsonparser.value)
   }
 }
+/*
 
 /********** AUTHORINFOSPartial ********/
 object AuthorPartialFiles {
@@ -353,3 +359,4 @@ class KeyValueJSONAuthorPartial extends AuthorPartialBenchmarkHelper {
     runBM(f, "jsonparser", JSonImplBoxed.jsonparser.value)
   }
 }
+  */
