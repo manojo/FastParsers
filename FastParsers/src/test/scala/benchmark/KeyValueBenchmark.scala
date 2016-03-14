@@ -10,6 +10,20 @@ import parsers.KVParsers._
 
 import scala.collection.mutable
 
+trait AuthorInfoReader {
+  type Files = List[Array[Char]]
+
+  def readFile(filename: String): Array[Char] = {
+    val fileName = s"FastParsers/src/test/resources/micro/$filename"
+    val channel = new RandomAccessFile(fileName, "r").getChannel
+    val buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size)
+    val contents = StandardCharsets.ISO_8859_1.decode(buffer).array
+    channel.close
+    contents
+  }
+
+}
+
 /*
 object KeyValueFiles {
   lazy val fileArrays = List("kvpairs.txt") map { (f: String) =>
@@ -284,30 +298,16 @@ class KeyValueSchemaKnownRecognizeWeeksADT extends WeeksBenchmarkHelper {
 
 /********** AUTHORINFOS ********/
 
-import FileImplicits._
 
-object AuthorInfoFiles {
-  lazy val fileArrays: List[mutable.WrappedArray[Char]] =
-    List("authorinfos-240.txt") map { (f: String) =>
-      // As we fork any test in the build, this is relative to the project
-      val fileName = s"FastParsers/src/test/resources/micro/$f"
-      val channel = new RandomAccessFile(fileName, "r").getChannel
-      val buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size)
-      val contents = StandardCharsets.ISO_8859_1.decode(buffer).array
-      channel.close
-      toWrappedArrayChar(contents)
-    }
+object AuthorInfoFiles extends AuthorInfoReader {
+  lazy val fileNames = List("authorinfos-240.txt")
+  lazy val fileArrays = fileNames map readFile
 
-  /* Convert to `WrappedArray` because `Array` is not `Traversable` and
-   * we need to generate a pickler to be serializable (scalameter) */
-  def toWrappedArrayChar(ca: Array[Char]): mutable.WrappedArray[Char] =
-    mutable.WrappedArray.make[Char](ca).asInstanceOf[mutable.WrappedArray[Char]]
-
-  type Files = List[mutable.WrappedArray[Char]]
-  implicit lazy val filesGen: Gen[Files] = Gen.single("files")(fileArrays)
+  implicit lazy val filesGen: Gen[String] = Gen.single("files")(fileNames)
 }
 
- trait AuthorInfosBenchmarkHelper extends BenchmarkHelper {
+trait AuthorInfosBenchmarkHelper extends BenchmarkHelper {
+  lazy val data = AuthorInfoFiles.fileArrays.head
   val description = "authorinfos"
 }
 
@@ -317,20 +317,21 @@ class KeyValueAuthorAll extends Bench.Group {
 }
 
 trait KeyValueSchemaKnownRecognizeAuthorInfos extends AuthorInfosBenchmarkHelper {
-  import AuthorInfoFiles.{filesGen, Files}
-  performanceOfParsers { (gfiles: Gen[Files]) =>
+  import AuthorInfoFiles.filesGen
+  performanceOfParsers { (gfiles: Gen[String]) =>
     runBM(gfiles, "schemaKnownRecognizeAuthorInfos",
       KVSchemaKnownRecognizeAuthorInfos.parser.main)
   }(filesGen)
 }
 
 trait KeyValueJSONAuthorInfos extends AuthorInfosBenchmarkHelper {
-  import AuthorInfoFiles.{filesGen, Files}
+  import AuthorInfoFiles.filesGen
   import parsers.JsonParsers._
-  performanceOfParsers { (gfiles: Gen[Files]) =>
+  performanceOfParsers { (gfiles: Gen[String]) =>
     runBM(gfiles, "jsonparser", JSonImplBoxed.jsonparser.value)
   }(filesGen)
 }
+
 /*
 
 /********** AUTHORINFOSPartial ********/
