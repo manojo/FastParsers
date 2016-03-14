@@ -4,6 +4,7 @@ import java.io.RandomAccessFile
 import java.nio.channels.FileChannel
 import java.nio.charset.StandardCharsets
 
+import org.scalameter.Key
 import org.scalameter.picklers.Implicits._
 import org.scalameter.api._
 import parsers.KVParsers._
@@ -300,7 +301,7 @@ class KeyValueSchemaKnownRecognizeWeeksADT extends WeeksBenchmarkHelper {
 
 
 object AuthorInfoFiles extends AuthorInfoReader {
-  lazy val fileNames = List("authorinfos-240.txt")
+  lazy val fileNames = List("authorinfos-480.txt")
   lazy val fileArrays = fileNames map readFile
 
   implicit lazy val filesGen: Gen[String] = Gen.single("files")(fileNames.head)
@@ -312,8 +313,17 @@ trait AuthorInfosBenchmarkHelper extends BenchmarkHelper {
 }
 
 class KeyValueAuthorAll extends Bench.Group {
-  include(new KeyValueSchemaKnownRecognizeAuthorInfos {})
-  include(new KeyValueJSONAuthorInfos {})
+  performance of "recogniser" config (
+   Key.reports.resultDir -> "benchmarks"
+  ) in {
+    include(new KeyValueSchemaKnownRecognizeAuthorInfos {})
+  }
+
+  performance of "parser" config (
+    Key.reports.resultDir -> "benchmarks"
+  ) in {
+    include(new KeyValueJSONAuthorInfos {})
+  }
 }
 
 trait KeyValueSchemaKnownRecognizeAuthorInfos extends AuthorInfosBenchmarkHelper {

@@ -11,6 +11,7 @@ import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable
 
 trait BenchmarkHelper extends OfflineRegressionReport {
+  override def reporter = Reporter.Composite(new CSVReporter[Double], super.reporter)
 
   override def measurer: Measurer[Double] = new Measurer.Default
     with Measurer.PeriodicReinstantiation[Double]
@@ -43,7 +44,7 @@ trait BenchmarkHelper extends OfflineRegressionReport {
     }
   }
 
-  final val yourkitPath = "/home/jonnalag/yjp-2016.02/bin/linux-x86-64/libyjpagent.so"
+  final val yourkitPath = "/home/jvican/downloads/yjp-2016.02/bin/linux-x86-64/libyjpagent.so"
 
   def performanceOfParsers[T](measurer: Gen[T] => Unit)(implicit seed: Gen[T]): Unit = {
     performance of s"$description" config(
