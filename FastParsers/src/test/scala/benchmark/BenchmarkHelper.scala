@@ -6,25 +6,28 @@ import org.scalameter.api._
 import org.scalameter.Key
 
 
-abstract class BenchmarkRun extends OfflineRegressionReport
+abstract class BenchmarkRun extends OfflineRegressionReport {
+  override def reporter = new Reporter.Composite(CSVReporter, super.reporter)
+}
 
 abstract class BenchmarkHelper extends OfflineRegressionReport {
   def independentSamples = 1
   def benchRunsPerSample = 128
   def benchRuns = independentSamples * benchRunsPerSample
 
-  def memoryInHeap = "4g"
+  def memoryInHeap = "8g"
+  def data: Array[Char]
 
   type Rule = (Array[Char], Int) => ParseResult[Any, _]
 
   def description: String
 
-  def runBM(g: Gen[List[Array[Char]]], mName: String, meth: Rule): Unit = {
+  def runBM(g: Gen[List[Int]], mName: String, meth: Rule): Unit = {
     measure method mName in {
       using(g) in { fs =>
         for (f <- fs) {
-          performance of s"$mName on ${f.size}" in {
-            meth(f, 0)
+          performance of s"$mName benchmark" in {
+            meth(data, 0)
             ()
           }
         }
@@ -32,8 +35,8 @@ abstract class BenchmarkHelper extends OfflineRegressionReport {
     }
   }
 
-  def performanceOfParsers(measurer: Gen[List[Array[Char]]] => Unit)
-                          (implicit files: Gen[List[Array[Char]]]): Unit = {
+  def performanceOfParsers(measurer: Gen[List[Int]] => Unit)
+                          (implicit files: Gen[List[Int]]): Unit = {
     performance of s"$description" config(
       Key.exec.benchRuns -> benchRuns,
       // Key.verbose -> false,
