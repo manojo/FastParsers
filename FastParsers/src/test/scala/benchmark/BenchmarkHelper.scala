@@ -12,10 +12,10 @@ import scala.collection.mutable
 
 trait BenchmarkHelper extends OfflineRegressionReport {
 
-  override def measurer: Measurer[Double] =
-    new Measurer.PeriodicReinstantiation[Double]
-      with Measurer.OutlierElimination[Double]
-      with Measurer.RelativeNoise {
+  override def measurer: Measurer[Double] = new Measurer.Default
+    with Measurer.PeriodicReinstantiation[Double]
+    with Measurer.OutlierElimination[Double]
+    with Measurer.RelativeNoise {
     def numeric: Numeric[Double] = implicitly[Numeric[Double]]
   }
 
