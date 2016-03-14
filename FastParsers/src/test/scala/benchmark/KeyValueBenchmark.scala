@@ -303,7 +303,7 @@ object AuthorInfoFiles extends AuthorInfoReader {
   lazy val fileNames = List("authorinfos-240.txt")
   lazy val fileArrays = fileNames map readFile
 
-  implicit lazy val filesGen: Gen[String] = Gen.single("files")(fileNames)
+  implicit lazy val filesGen: Gen[String] = Gen.single("files")(fileNames.head)
 }
 
 trait AuthorInfosBenchmarkHelper extends BenchmarkHelper {
