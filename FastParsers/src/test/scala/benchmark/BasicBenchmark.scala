@@ -2,15 +2,12 @@ package benchmark
 
 import fastparsers.framework.parseresult.{ParseResult, Success}
 import org.scalameter.Bench.OfflineRegressionReport
+import org.scalameter.Measurer.{RelativeNoise, OutlierElimination, PeriodicReinstantiation, MemoryFootprint}
 import org.scalameter.picklers.Implicits._
 import org.scalameter.api._
 import org.scalameter.Key
-import org.scalameter.picklers.TraversablePickler
 
-import scala.collection.generic.CanBuildFrom
-import scala.collection.mutable
-
-trait BenchmarkHelper extends OfflineRegressionReport {
+trait BasicBenchmark extends OfflineRegressionReport {
   override def reporter = Reporter.Composite(new CSVReporter[Double], super.reporter)
 
   override def measurer: Measurer[Double] = new Measurer.Default
@@ -44,7 +41,8 @@ trait BenchmarkHelper extends OfflineRegressionReport {
     }
   }
 
-  final val yourkitPath = "/home/jvican/downloads/yjp-2016.02/bin/linux-x86-64/libyjpagent.so"
+  final val home = sys.env.apply("HOME")
+  final val yourkitPath = s"$home/yjp-2016.02/bin/linux-x86-64/libyjpagent.so"
 
   def performanceOfParsers[T](measurer: Gen[T] => Unit)(implicit seed: Gen[T]): Unit = {
     performance of s"$description" config(
@@ -63,3 +61,8 @@ trait BenchmarkHelper extends OfflineRegressionReport {
     ) in { measurer(seed) }
   }
 }
+
+trait MemoryBenchmark extends BasicBenchmark {
+  override def measurer: Measurer[Double] = new Measurer.MemoryFootprint
+}
+
