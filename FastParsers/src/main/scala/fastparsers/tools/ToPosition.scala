@@ -23,20 +23,17 @@ object ToPosition {
     def slice(start: Int, end: Int): T
   }
 
-  /**
-   * TODOD change...
-   */
-
-  implicit class StringProxy(s: String) {
+  implicit class StringProxy(val s: String) extends AnyVal {
     def apply(n: Int):Char = s.charAt(n)
     def size: Int = s.length
     def slice(start: Int, end: Int): String = s.substring(start,end)
   }
 
-  implicit class CharArrayProxy(s: Array[Char]) {
+  implicit class CharArrayProxy(val s: Array[Char]) extends AnyVal {
     def apply(n: Int):Char = s(n)
     def size: Int = s.length
-    def slice(start: Int, end: Int): Array[Char] = util.Arrays.copyOfRange(s, start, start + end);
+    def slice(start: Int, end: Int): Array[Char] =
+      util.Arrays.copyOfRange(s, start, start + end)
   }
 
   /*
@@ -47,7 +44,7 @@ object ToPosition {
     val index = new ArrayBuffer[Int]()
     index += 0
 
-    def computeIndexTill(pos: Int) {
+    def computeIndexTill(pos: Int): Unit =  {
 
       def compute(from: Int, to: Int) = {
         for (i <- from until to)
@@ -78,7 +75,8 @@ object ToPosition {
     def get(offset: Int) = {
         val l = lineFromOffset(offset)
         new Position {
-          override protected def lineContents = input.slice(index(line - 1), index(line)).toString   //TODO change that
+          override protected def lineContents =
+            input.slice(index(line - 1), index(line)).toString
           override def line = l
           override def column = offset - index(lineFromOffset(l) - 1) + 1
         }

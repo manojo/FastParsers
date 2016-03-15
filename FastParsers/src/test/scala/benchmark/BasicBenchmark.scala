@@ -1,13 +1,13 @@
 package benchmark
 
 import fastparsers.framework.parseresult.{ParseResult, Success}
-import org.scalameter.Bench.OfflineRegressionReport
+import org.scalameter.Bench.OfflineReport
 import org.scalameter.Measurer.{RelativeNoise, OutlierElimination, PeriodicReinstantiation, MemoryFootprint}
 import org.scalameter.picklers.Implicits._
 import org.scalameter.api._
 import org.scalameter.Key
 
-trait BasicBenchmark extends OfflineRegressionReport {
+trait BasicBenchmark extends OfflineReport {
   override def reporter = Reporter.Composite(new CSVReporter[Double], super.reporter)
 
   override def measurer: Measurer[Double] = new Measurer.Default
@@ -19,10 +19,10 @@ trait BasicBenchmark extends OfflineRegressionReport {
 
   def tester: RegressionReporter.Tester
   def independentSamples = 1
-  def benchRunsPerSample = 128
+  def benchRunsPerSample = 12
   def benchRuns = independentSamples * benchRunsPerSample
 
-  def memoryInHeap = "16g"
+  def memoryInHeap = "22g"
   def data: Array[Char]
 
   type Rule = (Array[Char], Int) => ParseResult[Any, _]
