@@ -34,7 +34,7 @@ trait BasicBenchmark extends OfflineReport {
       using(g) in { fs =>
         for (f <- fs) {
           performance of s"$mName benchmark" in {
-            meth(data, 0)
+            val Success(res) = meth(data, 0)
           }
         }
       }
