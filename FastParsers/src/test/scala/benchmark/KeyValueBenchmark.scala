@@ -11,6 +11,7 @@ import parsers.KVParsers._
 
 trait AuthorInfoReader {
   type Files = List[Array[Char]]
+  private val RO = FileChannel.MapMode.READ_ONLY
 
   final def readFile(filename: String): Array[Char] = {
     val fileName = s"FastParsers/src/test/resources/micro/$filename"
@@ -18,7 +19,7 @@ trait AuthorInfoReader {
 
     def readFileUpfront = {
       val channel = new RandomAccessFile(fileName, "r").getChannel
-      val buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size).force()
+      val buffer = channel.map(RO, 0, channel.size).force()
       val contents = StandardCharsets.ISO_8859_1.decode(buffer).array
       channel.close
       println("File contents have been read")
@@ -26,26 +27,35 @@ trait AuthorInfoReader {
     }
 
     def readFileBySteps = {
-      val channel1 = new RandomAccessFile(fileName, "r").getChannel
-      val totalSize = channel1.size
-      val firstHalf = totalSize / 2
-      val secondHalf = totalSize - firstHalf
-      val buffer1 = channel1.map(FileChannel.MapMode.READ_ONLY, 0, firstHalf).force
-      println(s"Reading 0 + $firstHalf")
+      val channel = new RandomAccessFile(fileName, "r").getChannel
+      val totalSize = channel.size
+      /* Convert to `Int`, as the size of an array cannot be a `Long` */
+      val firstHalf = (totalSize / 2).toInt
+      val secondHalf = (totalSize - firstHalf).toInt
+      val buffer1 = channel.map(RO, 0, firstHalf).force
+      println(s"Reading file 0 + $firstHalf")
       val contents1 = StandardCharsets.ISO_8859_1.decode(buffer1).array
-      val buffer2 = channel1.map(FileChannel.MapMode.READ_ONLY, firstHalf, secondHalf).force
-      println(s"Reading $firstHalf + $secondHalf")
+      val buffer2 = channel.map(RO, firstHalf, secondHalf).force
+      println(s"Reading ${firstHalf + secondHalf} from $firstHalf")
       val contents2 = StandardCharsets.ISO_8859_1.decode(buffer2).array
-      channel1.close
-      println(s"Reading from 0 to $firstHalf")
+      channel.close
 
-      val contents = Array.ofDim[Char](channel1.size.toInt)
-      System.arraycopy(contents1, 0, contents, 0, contents1.length)
-      System.arraycopy(contents2, 0, contents, contents1.length, contents2.length)
-      println("File contents have been read and copied")
+      val contents = Array.ofDim[Char](totalSize.toInt)
+      /* Heads up - don't use {contents1 or contents2}.length because
+       * the actual size of the contents is the same than `totalSize`. */
+      System.arraycopy(contents1, 0, contents, 0, firstHalf)
+      System.arraycopy(contents2, 0, contents, firstHalf, secondHalf)
+      println("File contents have been put together into one single array")
       contents
     }
 
+    /* NIO `Charset`s are buggy and cannot be used for sizes of arrays
+     * around 2GB because it tries to allocate 2*n + 1 which gives an integer
+     * overflow and throws an `IllegalArgumentException`.
+     *
+     * To deal with larger files we need to create separate arrays and then
+     * concatenate them. This is only valid for file sizes than don't overcome
+     * `Int.MaxValue`. */
     if((2 * fileSize + 1) > Int.MaxValue) {
       println(s"File size is ~2GB, concretely: $fileSize")
       readFileBySteps
