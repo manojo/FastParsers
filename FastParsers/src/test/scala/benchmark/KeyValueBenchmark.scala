@@ -302,14 +302,14 @@ class KeyValueSchemaKnownRecognizeWeeksADT extends WeeksBenchmarkHelper {
 
 
 object AuthorInfoFiles extends AuthorInfoReader {
-  val fileNames = List("authorinfos-480.txt")
-  val fileArrays = fileNames map readFile
+  lazy val fileNames = List("authorinfos-480.txt")
+  lazy val fileArrays = fileNames map readFile
 
-  implicit val filesGen: Gen[String] = Gen.single("files")(fileNames.head)
+  implicit lazy val filesGen: Gen[String] = Gen.single("files")(fileNames.head)
 }
 
 trait AuthorInfosBenchmark extends BasicBenchmark {
-  val data = AuthorInfoFiles.fileArrays.head
+  lazy val data = AuthorInfoFiles.fileArrays.head
   val description = "authorinfos"
 }
 
