@@ -1,5 +1,8 @@
 package benchmark
 
+import java.text.SimpleDateFormat
+import java.util.Calendar
+
 import fastparsers.framework.parseresult.{ParseResult, Success}
 import org.scalameter.Bench.OfflineReport
 import org.scalameter.Measurer.{RelativeNoise, OutlierElimination, PeriodicReinstantiation, MemoryFootprint}
@@ -44,6 +47,9 @@ trait BasicBenchmark extends OfflineReport {
   final val home = sys.env.apply("HOME")
   final val yourkitPath = s"$home/yjp-2016.02/bin/linux-x86-64/libyjpagent.so"
 
+  val dateTimeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm")
+  val dateTime = dateTimeFormat.format(Calendar.getInstance().getTime)
+
   def performanceOfParsers[T](measurer: Gen[T] => Unit)(implicit seed: Gen[T]): Unit = {
     performance of s"$description" config(
       Key.exec.benchRuns -> benchRuns,
@@ -57,7 +63,8 @@ trait BasicBenchmark extends OfflineReport {
         // "-XX:+UnlockDiagnosticVMOptions",
         // "-XX:+PrintInlining",
         // "-XX:+PrintCompilation"
-      )
+      ),
+      Key.reports.resultDir -> s"report-$dateTime"
     ) in { measurer(seed) }
   }
 }
