@@ -365,10 +365,22 @@ class KeyValueAuthorAll extends Bench.Group {
     include(new KeyValueJSONAuthorInfos {})
   }
 
-  performance of "parser-recogniser" config (
+  performance of "parser-recogniser-8" config (
     Key.reports.resultDir -> "benchmarks"
     ) in {
-    include(new KeyValueJSONAuthorInfosParserRecogniser {})
+    include(new KeyValueJSONAuthorInfosParserRecogniser8 {})
+  }
+
+  performance of "parser-recogniser-4" config (
+    Key.reports.resultDir -> "benchmarks"
+    ) in {
+    include(new KeyValueJSONAuthorInfosParserRecogniser4 {})
+  }
+
+  performance of "parser-recogniser-12" config (
+    Key.reports.resultDir -> "benchmarks"
+    ) in {
+    include(new KeyValueJSONAuthorInfosParserRecogniser12 {})
   }
 }
 
@@ -388,12 +400,27 @@ trait KeyValueJSONAuthorInfos extends AuthorInfosBenchmark {
   }(filesGen)
 }
 
-trait KeyValueJSONAuthorInfosParserRecogniser extends AuthorInfosBenchmark {
+trait KeyValueJSONAuthorInfosParserRecogniser4 extends AuthorInfosBenchmark {
   import AuthorInfoFiles.filesGen
-  import parsers.JsonParsers._
   performanceOfParsers { (gfiles: Gen[String]) =>
-    runBM(gfiles, "jsonRecogniserParser",
-      KVSchemaKnownRecognizeAuthorPartial.parser.main)
+    runBM(gfiles, "jsonRecogniserParser4",
+      KVSchemaKnownRecognizeAuthorPartial4.parser.main)
+  }(filesGen)
+}
+
+trait KeyValueJSONAuthorInfosParserRecogniser8 extends AuthorInfosBenchmark {
+  import AuthorInfoFiles.filesGen
+  performanceOfParsers { (gfiles: Gen[String]) =>
+    runBM(gfiles, "jsonRecogniserParser8",
+      KVSchemaKnownRecognizeAuthorPartial8.parser.main)
+  }(filesGen)
+}
+
+trait KeyValueJSONAuthorInfosParserRecogniser12 extends AuthorInfosBenchmark {
+  import AuthorInfoFiles.filesGen
+  performanceOfParsers { (gfiles: Gen[String]) =>
+    runBM(gfiles, "jsonRecogniserParser12",
+      KVSchemaKnownRecognizeAuthorPartial12.parser.main)
   }(filesGen)
 }
 
