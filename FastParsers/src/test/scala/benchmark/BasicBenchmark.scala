@@ -22,7 +22,7 @@ trait BasicBenchmark extends OfflineReport {
   def benchRunsPerSample = 12
   def benchRuns = independentSamples * benchRunsPerSample
 
-  def memoryInHeap = "22g"
+  def memoryInHeap = "16g"
   def data: Array[Char]
 
   type Rule = (Array[Char], Int) => ParseResult[Any, _]
