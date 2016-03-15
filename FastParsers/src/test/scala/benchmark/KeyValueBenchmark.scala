@@ -325,12 +325,18 @@ class KeyValueAuthorAll extends Bench.Group {
   ) in {
     include(new KeyValueJSONAuthorInfos {})
   }
+
+  performance of "parser-recogniser" config (
+    Key.reports.resultDir -> "benchmarks"
+    ) in {
+    include(new  KeyValueJSONAuthorInfosParserRecogniser {})
+  }
 }
 
 trait KeyValueSchemaKnownRecognizeAuthorInfos extends AuthorInfosBenchmark {
   import AuthorInfoFiles.filesGen
   performanceOfParsers { (gfiles: Gen[String]) =>
-    runBM(gfiles, "schemaKnownRecognizeAuthorInfos",
+    runBM(gfiles, "recogniserAuthorInfos",
       KVSchemaKnownRecognizeAuthorInfos.parser.main)
   }(filesGen)
 }
@@ -339,7 +345,16 @@ trait KeyValueJSONAuthorInfos extends AuthorInfosBenchmark {
   import AuthorInfoFiles.filesGen
   import parsers.JsonParsers._
   performanceOfParsers { (gfiles: Gen[String]) =>
-    runBM(gfiles, "jsonparser", JSonImplBoxed.jsonparser.value)
+    runBM(gfiles, "jsonFullParser", JsonParser.parser.main)
+  }(filesGen)
+}
+
+trait KeyValueJSONAuthorInfosParserRecogniser extends AuthorInfosBenchmark {
+  import AuthorInfoFiles.filesGen
+  import parsers.JsonParsers._
+  performanceOfParsers { (gfiles: Gen[String]) =>
+    runBM(gfiles, "jsonRecogniserParser",
+      KVSchemaKnownRecognizeAuthorPartial.parser.main)
   }(filesGen)
 }
 

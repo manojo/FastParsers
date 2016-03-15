@@ -468,9 +468,7 @@ object KVParsers {
     }
   }
 
-  /**
-   * larger tuple
-   */
+  /** Full recognition of data. */
   object KVSchemaKnownRecognizeAuthorInfos {
 
     val login = "\"login\"".toCharArray
@@ -508,20 +506,20 @@ object KVParsers {
       def strLit = stringLitRec
 
       def loginParser = ws ~> litRec(login) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      def avatar_urlParser = ws ~> litRec(avatar_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      def gravatar_idParser = ws ~> litRec(gravatar_id) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def avatarUrlP = ws ~> litRec(avatar_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def gravatarIdP = ws ~> litRec(gravatar_id) ~> ws ~> ':' ~> ws ~> strLit ~> ws
       def urlParser = ws ~> litRec(url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      def html_urlParser = ws ~> litRec(html_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      def followers_urlParser = ws ~> litRec(followers_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      def following_urlParser = ws ~> litRec(following_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      def gists_urlParser = ws ~> litRec(gists_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      def starred_urlParser = ws ~> litRec(starred_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      def subscriptions_urlParser = ws ~> litRec(subscriptions_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      def organizations_urlParser = ws ~> litRec(organizations_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      def repos_urlParser = ws ~> litRec(repos_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      def events_urlParser = ws ~> litRec(events_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      def received_events_urlParser = ws ~> litRec(received_events_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      def authortypeParser = ws ~> litRec(authortype) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def htmlUrlP = ws ~> litRec(html_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def followersUrlP = ws ~> litRec(followers_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def followingUrlP = ws ~> litRec(following_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def gistsUrlP = ws ~> litRec(gists_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def starredUrlP = ws ~> litRec(starred_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def subscriptionsUrlP = ws ~> litRec(subscriptions_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def organizationsUrlP = ws ~> litRec(organizations_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def reposUrlP = ws ~> litRec(repos_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def eventsUrlP = ws ~> litRec(events_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def receivedEventsUrlP = ws ~> litRec(received_events_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      def authorTypeP = ws ~> litRec(authortype) ~> ws ~> ':' ~> ws ~> strLit ~> ws
 
       def idParser = //: Parser[String] =
         ws ~> litRec(id) ~> colon ~> num ~> ws
@@ -534,20 +532,20 @@ object KVParsers {
       def authorInfo: Parser[Unit] = (braceOpen ~>
         (loginParser <~ comma) ~>
         (idParser <~ comma) ~>
-        (avatar_urlParser <~ comma) ~>
-        (gravatar_idParser <~ comma) ~>
+        (avatarUrlP <~ comma) ~>
+        (gravatarIdP <~ comma) ~>
         (urlParser <~ comma) ~>
-        (html_urlParser <~ comma) ~>
-        (followers_urlParser <~ comma) ~>
-        (following_urlParser <~ comma) ~>
-        (gists_urlParser <~ comma) ~>
-        (starred_urlParser <~ comma) ~>
-        (subscriptions_urlParser <~ comma) ~>
-        (organizations_urlParser <~ comma) ~>
-        (repos_urlParser <~ comma) ~>
-        (events_urlParser <~ comma) ~>
-        (received_events_urlParser <~ comma) ~>
-        (authortypeParser <~ comma) ~>
+        (htmlUrlP <~ comma) ~>
+        (followersUrlP <~ comma) ~>
+        (followingUrlP <~ comma) ~>
+        (gistsUrlP <~ comma) ~>
+        (starredUrlP <~ comma) ~>
+        (subscriptionsUrlP <~ comma) ~>
+        (organizationsUrlP <~ comma) ~>
+        (reposUrlP <~ comma) ~>
+        (eventsUrlP <~ comma) ~>
+        (receivedEventsUrlP <~ comma) ~>
+        (authorTypeP <~ comma) ~>
         (siteAdmin ~> braceClose))
 
       def authorInfos = ((ws ~> '[' ~> ws) ~>
@@ -558,33 +556,33 @@ object KVParsers {
     }
   }
 
-  /**
-   * see when things break down
-   */
+  /** Recognize a half of the dataset and parse the other half. */
   object KVSchemaKnownRecognizeAuthorPartial {
 
     val login = "\"login\"".toCharArray
     val avatar_url = "\"avatar_url\"".toCharArray
     val gravatar_id = "\"gravatar_id\"".toCharArray
-    //val url = "\"url\"".toCharArray
-    //val html_url = "\"html_url\"".toCharArray
-    //val followers_url = "\"followers_url\"".toCharArray
-    //val following_url = "\"following_url\"".toCharArray
-    //val gists_url = "\"gists_url\"".toCharArray
-    //val starred_url = "\"starred_url\"".toCharArray
-    //val subscriptions_url = "\"subscriptions_url\"".toCharArray
-    //val organizations_url = "\"organizations_url\"".toCharArray
-    //val repos_url = "\"repos_url\"".toCharArray
-    //val events_url = "\"events_url\"".toCharArray
-    //val received_events_url = "\"received_events_url\"".toCharArray
-    //val authortype = "\"type\"".toCharArray
+    val url = "\"url\"".toCharArray
+    val html_url = "\"html_url\"".toCharArray
+    val followers_url = "\"followers_url\"".toCharArray
+    val following_url = "\"following_url\"".toCharArray
+    val gists_url = "\"gists_url\"".toCharArray
+    val starred_url = "\"starred_url\"".toCharArray
+    val subscriptions_url = "\"subscriptions_url\"".toCharArray
+    val organizations_url = "\"organizations_url\"".toCharArray
+    val repos_url = "\"repos_url\"".toCharArray
+    val events_url = "\"events_url\"".toCharArray
+    val received_events_url = "\"received_events_url\"".toCharArray
+    val authortype = "\"type\"".toCharArray
     val id = "\"id\"".toCharArray
+    val site_admin = "\"site_admin\"".toCharArray
 
-    //val site_admin = "\"site_admin\"".toCharArray
+    val `true` = "true".toCharArray
+    val `false` = "false".toCharArray
 
-
-    //val `true` = "true".toCharArray
-    //val `false` = "false".toCharArray
+    case class AuthorInfo(login: String, id: String, avatar: String,
+                          gravatar: String, url: String, htmlUrl: String,
+                          followersUrl: String, followingUrl: String)
 
     lazy val parser = FastParsersCharArray {
 
@@ -595,50 +593,63 @@ object KVParsers {
       def colon = ws ~> ':' ~> ws
 
       def num = number
-      def strLit = stringLitRec
+      def strLitRec = stringLitRec
 
-      def loginParser = ws ~> litRec(login) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      def avatar_urlParser = ws ~> litRec(avatar_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      def gravatar_idParser = ws ~> litRec(gravatar_id) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      //def urlParser = ws ~> litRec(url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      //def html_urlParser = ws ~> litRec(html_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      //def followers_urlParser = ws ~> litRec(followers_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      //def following_urlParser = ws ~> litRec(following_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      //def gists_urlParser = ws ~> litRec(gists_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      //def starred_urlParser = ws ~> litRec(starred_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      //def subscriptions_urlParser = ws ~> litRec(subscriptions_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      //def organizations_urlParser = ws ~> litRec(organizations_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      //def repos_urlParser = ws ~> litRec(repos_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      //def events_urlParser = ws ~> litRec(events_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      //def received_events_urlParser = ws ~> litRec(received_events_url) ~> ws ~> ':' ~> ws ~> strLit ~> ws
-      //def authortypeParser = ws ~> litRec(authortype) ~> ws ~> ':' ~> ws ~> strLit ~> ws
+      /* These are parsers and therefore Parser[String] */
+      def loginParser =ws ~> litRec(login) ~> ws ~> ':' ~> ws ~> stringLit.map(_.toString) <~ ws
+      def avatarUrlP = ws ~> litRec(avatar_url) ~> ws ~> ':' ~> ws ~> stringLit.map(_.toString) <~ ws
+      def gravatarUrlP = ws ~> litRec(gravatar_id) ~> ws ~> ':' ~> ws ~> stringLit.map(_.toString) <~ ws
+      def urlP = ws ~> litRec(url) ~> ws ~> ':' ~> ws ~> stringLit.map(_.toString) <~ ws
+      def htmlUrlP = ws ~> litRec(html_url) ~> ws ~> ':' ~> ws ~> stringLit.map(_.toString) <~ ws
+      def followerUrlP = ws ~> litRec(followers_url) ~> ws ~> ':' ~> ws ~> stringLit.map(_.toString) <~ ws
+      def followingUrlP = ws ~> litRec(following_url) ~> ws ~> ':' ~> ws ~> stringLit.map(_.toString) <~ ws
 
-      def idParser = //: Parser[String] =
-        ws ~> litRec(id) ~> colon ~> num ~> ws
+      /* These are recognisers and therefore only Parser[Unit] since we use `litRec` */
+      def gistUrlP = ws ~> litRec(gists_url) ~> ws ~> ':' ~> ws ~> strLitRec ~> ws
+      def starredUrlP = ws ~> litRec(starred_url) ~> ws ~> ':' ~> ws ~> strLitRec ~> ws
+      def subscriptionsUrlP = ws ~> litRec(subscriptions_url) ~> ws ~> ':' ~> ws ~> strLitRec ~> ws
+      def organizationsUrlP = ws ~> litRec(organizations_url) ~> ws ~> ':' ~> ws ~> strLitRec ~> ws
+      def reposUrlP = ws ~> litRec(repos_url) ~> ws ~> ':' ~> ws ~> strLitRec ~> ws
+      def eventsUrlP = ws ~> litRec(events_url) ~> ws ~> ':' ~> ws ~> strLitRec ~> ws
+      def receivedEventsUrlP = ws ~> litRec(received_events_url) ~> ws ~> ':' ~> ws ~> strLitRec ~> ws
+      def authorTypeP = ws ~> litRec(authortype) ~> ws ~> ':' ~> ws ~> strLitRec ~> ws
 
-      //def siteAdmin: Parser[Unit] =
-      //  ws ~> litRec(site_admin) ~> colon ~> (
-      //    litRec(`true`) | litRec(`false`)
-      //  )
+      def idParser: Parser[String] =
+        ws ~> litRec(id) ~> colon ~> num.map(_.toString) <~ ws
 
-      def authorInfo: Parser[Unit] = (braceOpen ~>
-        (loginParser <~ comma) ~>
-        (idParser <~ comma) ~>
-        (avatar_urlParser <~ comma) ~>
-        (gravatar_idParser <~ braceClose) )//~>
-        //(urlParser <~ comma) ~>
-        //(html_urlParser <~ comma) ~>
-        //(followers_urlParser <~ comma) ~>
-        //(following_urlParser <~ comma) ~>
-        //(gists_urlParser <~ comma) ~>
-        //(starred_urlParser <~ comma) ~>
-        //(subscriptions_urlParser <~ comma) ~>
-        //(organizations_urlParser <~ comma) ~>
-        //(repos_urlParser <~ comma) ~>
-        //(events_urlParser <~ comma) ~>
-        //(received_events_urlParser <~ comma) ~>
-        //(authortypeParser <~ comma) ~>
-        //(siteAdmin ~> braceClose))
+      def siteAdmin: Parser[Unit] =
+        ws ~> litRec(site_admin) ~> colon ~> (
+          litRec(`true`) | litRec(`false`)
+        )
+
+      def authorInfoParser = (braceOpen ~>
+        (loginParser <~ comma) ~
+        (idParser <~ comma) ~
+        (avatarUrlP <~ comma) ~
+        (gravatarUrlP <~ braceClose) ~
+        (urlP <~ comma) ~
+        (htmlUrlP <~ comma) ~
+        (followerUrlP <~ comma) ~
+        (followingUrlP <~ comma)
+      )
+
+      def authorInfoRecogniser: Parser[Unit] = (
+        (gistUrlP <~ comma) <~
+          (starredUrlP <~ comma) <~
+          (subscriptionsUrlP <~ comma) <~
+          (organizationsUrlP <~ comma) <~
+          (reposUrlP <~ comma) <~
+          (eventsUrlP <~ comma) <~
+          (receivedEventsUrlP <~ comma) <~
+          (authorTypeP <~ comma) <~
+          (siteAdmin ~> braceClose)
+      )
+
+      def authorInfo: Parser[AuthorInfo] =
+        (authorInfoParser <~ authorInfoRecogniser).map {
+          case (((((((a,b),c),d),e),f),g),h) =>
+            AuthorInfo(a, b, c, d, e, f, g, h)
+        }
 
       def authorInfos = ((ws ~> '[' ~> ws) ~>
         repSepUnit(authorInfo, ws ~> ',' ~> ws) <~
