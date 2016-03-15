@@ -3,6 +3,7 @@ package fastparsers.parsers
 import fastparsers.error.ParseError
 import fastparsers.input._
 
+import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 
 import scala.collection.mutable.ListBuffer
@@ -88,6 +89,23 @@ trait BaseParseQueryImpl extends ParseQueryImplBase with Traversers {
         }
       case _ =>
         abort("Could not unwrap parser")
+    }
+  }
+
+  private def collectConcatParsers(parsers: c.Tree): List[c.Tree] = {
+    @tailrec
+    def collect(ps: c.Tree, acc: List[c.Tree]): List[c.Tree] = ps match {
+      case q @ q"$p.baseParsers[$t]($a) ~[$_] $b" => collect(a, b :: acc)
+      case _ => acc
+    }
+
+    /* Make sure that it matches expected form before collecting */
+    parsers match {
+      case q @ q"$p.baseParsers[$t]($a) ~[$_] $b" =>
+        b :: collect(a, List.empty[c.Tree])
+      case weirdShape =>
+        println(showRaw(weirdShape))
+        abort("Unexpected shape in concatenated parsers")
     }
   }
 

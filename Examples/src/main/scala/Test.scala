@@ -1,21 +1,15 @@
 /**
- * Created with IntelliJ IDEA.
- * User: Eric
- * Date: 12.02.14
- * Time: 15:57
- * To change this template use File | Settings | File Templates.
- */
+  * Created with IntelliJ IDEA.
+  * User: Eric
+  * Date: 12.02.14
+  * Time: 15:57
+  * To change this template use File | Settings | File Templates.
+  */
 
 //because warnings
 
 import fastparsers.framework.getAST
-import fastparsers.framework.implementations.{
-  FastParsers,
-  FastPrinters,
-  FastArrayParsers,
-  TransformedPrinters,
-  FasterParsers
-}
+import fastparsers.framework.implementations.{FastParsers, FastPrinters, FastArrayParsers, TransformedPrinters, FasterParsers}
 import fastparsers.framework.parseresult._
 import fastparsers.input.InputWindow
 import fastparsers.parsers.Parser
@@ -68,13 +62,11 @@ object Test {
     parser
   }
 
- def main(args: Array[String]): Unit = {
-
-
-  println("===============BEFORE============")
-  pprint.pprintln(parserPre.ruleMap("test2"))
-  println()
-  println("===============AFTER=============")
-  pprint.pprintln(parserPost.ruleMap("test2"))
- }
+  def main(args: Array[String]): Unit = {
+    println("===============BEFORE============")
+    pprint.pprintln(parserPre.ruleMap("test2"))
+    println()
+    println("===============AFTER=============")
+    pprint.pprintln(parserPost.ruleMap("test2"))
+  }
 }
