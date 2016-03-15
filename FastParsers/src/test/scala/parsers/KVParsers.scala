@@ -468,8 +468,7 @@ object KVParsers {
     }
   }
 
-  /** Full recognition of data. */
-  object KVSchemaKnownRecognizeAuthorInfos {
+  trait AuthorInfosParserHelper {
 
     val login = "\"login\"".toCharArray
     val avatar_url = "\"avatar_url\"".toCharArray
@@ -490,9 +489,13 @@ object KVParsers {
 
     val site_admin = "\"site_admin\"".toCharArray
 
-
     val `true` = "true".toCharArray
     val `false` = "false".toCharArray
+
+  }
+
+  /** Full recognition of data. */
+  object KVSchemaKnownRecognizeAuthorInfos extends AuthorInfosParserHelper {
 
     lazy val parser = FastParsersCharArray {
 
@@ -557,28 +560,7 @@ object KVParsers {
   }
 
   /** Recognize a half of the dataset and parse the other half. */
-  object KVSchemaKnownRecognizeAuthorPartial {
-
-    val login = "\"login\"".toCharArray
-    val avatar_url = "\"avatar_url\"".toCharArray
-    val gravatar_id = "\"gravatar_id\"".toCharArray
-    val url = "\"url\"".toCharArray
-    val html_url = "\"html_url\"".toCharArray
-    val followers_url = "\"followers_url\"".toCharArray
-    val following_url = "\"following_url\"".toCharArray
-    val gists_url = "\"gists_url\"".toCharArray
-    val starred_url = "\"starred_url\"".toCharArray
-    val subscriptions_url = "\"subscriptions_url\"".toCharArray
-    val organizations_url = "\"organizations_url\"".toCharArray
-    val repos_url = "\"repos_url\"".toCharArray
-    val events_url = "\"events_url\"".toCharArray
-    val received_events_url = "\"received_events_url\"".toCharArray
-    val authortype = "\"type\"".toCharArray
-    val id = "\"id\"".toCharArray
-    val site_admin = "\"site_admin\"".toCharArray
-
-    val `true` = "true".toCharArray
-    val `false` = "false".toCharArray
+  object KVSchemaKnownRecognizeAuthorPartial extends AuthorInfosParserHelper {
 
     case class AuthorInfo(login: String, id: String, avatar: String,
                           gravatar: String, url: String, htmlUrl: String,
@@ -596,7 +578,7 @@ object KVParsers {
       def strLitRec = stringLitRec
 
       /* These are parsers and therefore Parser[String] */
-      def loginParser =ws ~> litRec(login) ~> ws ~> ':' ~> ws ~> stringLit.map(_.toString) <~ ws
+      def loginParser = ws ~> litRec(login) ~> ws ~> ':' ~> ws ~> stringLit.map(_.toString) <~ ws
       def avatarUrlP = ws ~> litRec(avatar_url) ~> ws ~> ':' ~> ws ~> stringLit.map(_.toString) <~ ws
       def gravatarUrlP = ws ~> litRec(gravatar_id) ~> ws ~> ':' ~> ws ~> stringLit.map(_.toString) <~ ws
       def urlP = ws ~> litRec(url) ~> ws ~> ':' ~> ws ~> stringLit.map(_.toString) <~ ws
@@ -622,11 +604,11 @@ object KVParsers {
           litRec(`true`) | litRec(`false`)
         )
 
-      def authorInfoParser = (braceOpen ~>
+      def authorInfoParser = (
         (loginParser <~ comma) ~
         (idParser <~ comma) ~
         (avatarUrlP <~ comma) ~
-        (gravatarUrlP <~ braceClose) ~
+        (gravatarUrlP <~ comma) ~
         (urlP <~ comma) ~
         (htmlUrlP <~ comma) ~
         (followerUrlP <~ comma) ~
@@ -642,11 +624,11 @@ object KVParsers {
           (eventsUrlP <~ comma) <~
           (receivedEventsUrlP <~ comma) <~
           (authorTypeP <~ comma) <~
-          (siteAdmin ~> braceClose)
+          siteAdmin
       )
 
       def authorInfo: Parser[AuthorInfo] =
-        (authorInfoParser <~ authorInfoRecogniser).map {
+        (braceOpen ~> authorInfoParser <~ authorInfoRecogniser <~ braceClose).map {
           case (((((((a,b),c),d),e),f),g),h) =>
             AuthorInfo(a, b, c, d, e, f, g, h)
         }
