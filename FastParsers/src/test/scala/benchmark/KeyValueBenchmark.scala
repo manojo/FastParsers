@@ -27,21 +27,27 @@ trait AuthorInfoReader {
 
     def readFileBySteps = {
       val channel1 = new RandomAccessFile(fileName, "r").getChannel
-      val firstHalf = channel1.size / 2
-      val secondHalf = channel1.size - firstHalf
-      val channel2 = new RandomAccessFile(fileName, "r").getChannel
+      val totalSize = channel1.size
+      val firstHalf = totalSize / 2
+      val secondHalf = totalSize - firstHalf
       val buffer1 = channel1.map(FileChannel.MapMode.READ_ONLY, 0, firstHalf).force
+      println(s"Reading 0 + $firstHalf")
       val contents1 = StandardCharsets.ISO_8859_1.decode(buffer1).array
-      val buffer2 = channel2.map(FileChannel.MapMode.READ_ONLY, 0, secondHalf).force
+      val buffer2 = channel1.map(FileChannel.MapMode.READ_ONLY, firstHalf, secondHalf).force
+      println(s"Reading $firstHalf + $secondHalf")
       val contents2 = StandardCharsets.ISO_8859_1.decode(buffer2).array
       channel1.close
-      channel2.close
-      println("File contents have been read")
-      contents1 ++ contents2
+      println(s"Reading from 0 to $firstHalf")
+
+      val contents = Array.ofDim[Char](channel1.size.toInt)
+      System.arraycopy(contents1, 0, contents, 0, contents1.length)
+      System.arraycopy(contents2, 0, contents, contents1.length, contents2.length)
+      println("File contents have been read and copied")
+      contents
     }
 
-    if(fileSize > Int.MaxValue) {
-      println("File size is ~2GB")
+    if((2 * fileSize + 1) > Int.MaxValue) {
+      println(s"File size is ~2GB, concretely: $fileSize")
       readFileBySteps
     } else {
       readFileUpfront
