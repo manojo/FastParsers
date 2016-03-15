@@ -329,7 +329,7 @@ class KeyValueAuthorAll extends Bench.Group {
   performance of "parser-recogniser" config (
     Key.reports.resultDir -> "benchmarks"
     ) in {
-    include(new  KeyValueJSONAuthorInfosParserRecogniser {})
+    include(new KeyValueJSONAuthorInfosParserRecogniser {})
   }
 }
 
