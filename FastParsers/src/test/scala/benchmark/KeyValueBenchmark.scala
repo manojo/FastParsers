@@ -1,6 +1,6 @@
 package benchmark
 
-import java.io.RandomAccessFile
+import java.io.{File, RandomAccessFile}
 import java.nio.channels.FileChannel
 import java.nio.charset.StandardCharsets
 
@@ -9,21 +9,44 @@ import org.scalameter.picklers.Implicits._
 import org.scalameter.api._
 import parsers.KVParsers._
 
-import scala.collection.mutable
-
 trait AuthorInfoReader {
   type Files = List[Array[Char]]
 
   final def readFile(filename: String): Array[Char] = {
     val fileName = s"FastParsers/src/test/resources/micro/$filename"
-    val channel = new RandomAccessFile(fileName, "r").getChannel
-    val buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size).force()
-    val contents = StandardCharsets.ISO_8859_1.decode(buffer).array
-    channel.close
-    println("File contents have been read")
-    contents
-  }
+    val fileSize = (new File(fileName)).length
 
+    def readFileUpfront = {
+      val channel = new RandomAccessFile(fileName, "r").getChannel
+      val buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size).force()
+      val contents = StandardCharsets.ISO_8859_1.decode(buffer).array
+      channel.close
+      println("File contents have been read")
+      contents
+    }
+
+    def readFileBySteps = {
+      val channel1 = new RandomAccessFile(fileName, "r").getChannel
+      val firstHalf = channel1.size / 2
+      val secondHalf = channel1.size - firstHalf
+      val channel2 = new RandomAccessFile(fileName, "r").getChannel
+      val buffer1 = channel1.map(FileChannel.MapMode.READ_ONLY, 0, firstHalf).force
+      val contents1 = StandardCharsets.ISO_8859_1.decode(buffer1).array
+      val buffer2 = channel2.map(FileChannel.MapMode.READ_ONLY, 0, secondHalf).force
+      val contents2 = StandardCharsets.ISO_8859_1.decode(buffer2).array
+      channel1.close
+      channel2.close
+      println("File contents have been read")
+      contents1 ++ contents2
+    }
+
+    if(fileSize > Int.MaxValue) {
+      println("File size is ~2GB")
+      readFileBySteps
+    } else {
+      readFileUpfront
+    }
+  }
 }
 
 /*
