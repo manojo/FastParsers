@@ -633,7 +633,7 @@ object KVParsers {
       }
 
       def authorInfos = ((ws ~> '[' ~> ws) ~>
-        repSepUnit(authorInfo, ws ~> ',' ~> ws) <~
+        repSep(authorInfo, ws ~> ',' ~> ws) <~
         (ws ~> ']' ~> ws))
 
       def main = authorInfos
@@ -703,7 +703,7 @@ object KVParsers {
       }
 
       def authorInfos = ((ws ~> '[' ~> ws) ~>
-        repSepUnit(authorInfo, ws ~> ',' ~> ws) <~
+        repSep(authorInfo, ws ~> ',' ~> ws) <~
         (ws ~> ']' ~> ws))
 
       def main = authorInfos
@@ -779,7 +779,7 @@ object KVParsers {
       }
 
       def authorInfos = ((ws ~> '[' ~> ws) ~>
-        repSepUnit(authorInfo, ws ~> ',' ~> ws) <~
+        repSep(authorInfo, ws ~> ',' ~> ws) <~
         (ws ~> ']' ~> ws))
 
       def main = authorInfos
