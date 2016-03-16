@@ -136,7 +136,6 @@ object JsonParsers {
     case (Tuple2(x1,y1),JSON.~(x2,y2)) => JsonEqual(x1,x2) && JsonEqual(y1,y2)
     case (JSON.~(x1,y1),(x2,y2)) => JsonEqual(x1,x2) && JsonEqual(y1,y2)
     case _ => a == b
-
   }
 
   /**

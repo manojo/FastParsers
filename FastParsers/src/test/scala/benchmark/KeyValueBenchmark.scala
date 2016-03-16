@@ -4,9 +4,12 @@ import java.io.{File, RandomAccessFile}
 import java.nio.channels.FileChannel
 import java.nio.charset.StandardCharsets
 
+import fastparse.core.Parsed
+import fastparse.core.Parsed.{Failure, Success}
 import org.scalameter.Key
 import org.scalameter.picklers.Implicits._
 import org.scalameter.api._
+import parsers.JsonParsers.{FastParseJSON, JsonParser}
 import parsers.KVParsers._
 
 trait AuthorInfoReader {
@@ -46,6 +49,7 @@ trait AuthorInfoReader {
       System.arraycopy(contents1, 0, contents, 0, firstHalf)
       System.arraycopy(contents2, 0, contents, firstHalf, secondHalf)
       println("File contents have been put together into one single array")
+      println(s"File size ${contents.length}")
       contents
     }
 
@@ -341,7 +345,7 @@ class KeyValueSchemaKnownRecognizeWeeksADT extends WeeksBenchmarkHelper {
 
 
 object AuthorInfoFiles extends AuthorInfoReader {
-  lazy val fileNames = List("authorinfos-480.txt")
+  lazy val fileNames = List("authorinfos.txt")
   lazy val fileArrays = fileNames map readFile
 
   implicit lazy val filesGen: Gen[String] = Gen.single("files")(fileNames.head)
@@ -349,12 +353,36 @@ object AuthorInfoFiles extends AuthorInfoReader {
 
 trait AuthorInfosBenchmark extends BasicBenchmark {
   lazy val data = AuthorInfoFiles.fileArrays.head
+  lazy val dataStr = {
+    println("concatenate to string")
+    data.mkString
+  }
   val description = "authorinfos"
+}
+
+class KeyValueFastparse extends AuthorInfosBenchmark {
+  import AuthorInfoFiles.filesGen
+  performanceOfParsers { (gfiles: Gen[String]) =>
+    measure method "fastparse" in {
+      using(gfiles) in { fs =>
+        for (f <- fs) {
+          performance of s"fastparse benchmark" in {
+            FastParseJSON.jsonExpr.parse(dataStr) match {
+              case Success(_, _) => println("hey")
+              case Failure(_, _, _) => println("bad")
+            }
+            ()
+          }
+        }
+      }
+    }
+  }(filesGen)
 }
 
 class KeyValueAuthorAll extends Bench.Group {
   performance of "recogniser" config (
-   Key.reports.resultDir -> "benchmarks"
+   Key.reports.resultDir -> "benchmarks",
+    Key.exec.maxWarmupRuns -> 2
   ) in {
     include(new KeyValueSchemaKnownRecognizeAuthorInfos {})
   }
