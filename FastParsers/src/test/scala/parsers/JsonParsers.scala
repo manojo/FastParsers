@@ -153,10 +153,10 @@ object JsonParsers {
           this.asInstanceOf[Obj].value.find(_._1 == s).get._2
       }
 
-      case class Str(value: java.lang.String) extends AnyVal with Val
-      case class Obj(value: Map[java.lang.String, Val]) extends AnyVal with Val
-      case class Arr(value: Array[Val]) extends AnyVal with Val
-      case class Num(value: Double) extends AnyVal with Val
+      case class Str(value: java.lang.String) extends Val
+      case class Obj(value: Map[java.lang.String, Val]) extends Val
+      case class Arr(value: Array[Val]) extends Val
+      case class Num(value: Double) extends Val
 
       case object False extends Val {
         def value: Boolean = false

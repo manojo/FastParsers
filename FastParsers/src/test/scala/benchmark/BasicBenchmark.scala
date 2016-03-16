@@ -22,7 +22,7 @@ trait BasicBenchmark extends OfflineReport {
 
   def tester: RegressionReporter.Tester
   def independentSamples = 1
-  def benchRunsPerSample = 12
+  def benchRunsPerSample = 6
   def benchRuns = independentSamples * benchRunsPerSample
 
   def memoryInHeap = "2g"
