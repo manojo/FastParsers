@@ -22,10 +22,10 @@ trait BasicBenchmark extends OfflineReport {
 
   def tester: RegressionReporter.Tester
   def independentSamples = 1
-  def benchRunsPerSample = 6
+  def benchRunsPerSample = 10
   def benchRuns = independentSamples * benchRunsPerSample
 
-  def memoryInHeap = "2g"
+  def memoryInHeap = "16g"
   def data: Array[Char]
 
   type Rule = (Array[Char], Int) => ParseResult[Any, _]
@@ -53,7 +53,6 @@ trait BasicBenchmark extends OfflineReport {
   def performanceOfParsers[T](measurer: Gen[T] => Unit)(implicit seed: Gen[T]): Unit = {
     performance of s"$description" config(
       Key.exec.benchRuns -> benchRuns,
-      Key.exec.maxWarmupRuns -> 5,
       Key.verbose -> true,
       Key.exec.independentSamples -> independentSamples,
       // Key.reports.resultDir -> "benchmark_results"
