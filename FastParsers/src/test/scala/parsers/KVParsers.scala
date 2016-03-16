@@ -10,10 +10,10 @@ import InputWindow._
 object KVParsers {
 
   /**
-   * A pair string parser. Parses stuff of the form
-   * [{"..." : "...", "...": "..."}]
-   * maps stuff into strings early
-   */
+    * A pair string parser. Parses stuff of the form
+    * [{"..." : "...", "...": "..."}]
+    * maps stuff into strings early
+    */
   object KVMapEarly {
     lazy val parser = FastParsersCharArray {
       def ws = whitespaces
@@ -26,10 +26,10 @@ object KVParsers {
   }
 
   /**
-   * A pair string parser. Parses stuff of the form
-   * [{"..." : "...", "...": "..."}]
-   * maps at pair creation time
-   */
+    * A pair string parser. Parses stuff of the form
+    * [{"..." : "...", "...": "..."}]
+    * maps at pair creation time
+    */
   object KVMapAtPairTime {
     lazy val parser = FastParsersCharArray {
       def ws = whitespaces
@@ -44,46 +44,48 @@ object KVParsers {
   }
 
   /**
-   * A pair string parser. Parses stuff of the form
-   * [{"..." : "...", "...": "..."}]
-   * maps at end of inner list
-   */
+    * A pair string parser. Parses stuff of the form
+    * [{"..." : "...", "...": "..."}]
+    * maps at end of inner list
+    */
   object KVMapAtInnerListTime {
     lazy val parser = FastParsersCharArray {
       def ws = whitespaces
       def stringPair = (stringLit <~ (ws ~> ':' <~ ws)) ~ stringLit
       def stringPairs = ((ws ~> '{' <~ ws) ~>
         repsep(stringPair, ws ~> ',' <~ ws) <~
-      (ws ~> '}' <~ ws)) map { ls => ls map { x =>
+        (ws ~> '}' <~ ws)) map { ls => ls map { x =>
         (x._1.toString, x._2.toString)
-      }}
+      }
+      }
       def main = '[' ~> repsep(stringPairs, ws ~> ',' <~ ws) <~ ']'
     }
   }
 
   /**
-   * A pair string parser. Parses stuff of the form
-   * [{"..." : "...", "...": "..."}]
-   * maps at the very end
-   */
+    * A pair string parser. Parses stuff of the form
+    * [{"..." : "...", "...": "..."}]
+    * maps at the very end
+    */
   object KVMapAtVeryEnd {
     lazy val parser = FastParsersCharArray {
       def ws = whitespaces
       def stringPair = (stringLit <~ (ws ~> ':' <~ ws)) ~ stringLit
       def stringPairs = ((ws ~> '{' <~ ws) ~>
         repsep(stringPair, ws ~> ',' <~ ws) <~
-      (ws ~> '}' <~ ws))
-      def main = ('[' ~> repsep(stringPairs, ws ~> ',' <~ ws) <~ ']')  map { ls =>
-        ls map { xs => xs map { x => (x._1.toString, x._2.toString)} }
+        (ws ~> '}' <~ ws))
+      def main = ('[' ~> repsep(stringPairs, ws ~> ',' <~ ws) <~ ']') map {
+        ls =>
+          ls map { xs => xs map { x => (x._1.toString, x._2.toString) } }
       }
     }
   }
 
   /**
-   * A pair string parser. Parses stuff of the form
-   * [{"..." : "...", "...": "..."}]
-   * just recognize
-   */
+    * A pair string parser. Parses stuff of the form
+    * [{"..." : "...", "...": "..."}]
+    * just recognize
+    */
   object KVRecognize {
     lazy val parser = FastParsersCharArray {
       def ws = whitespaces
@@ -91,7 +93,7 @@ object KVParsers {
 
       def stringPairs = ((ws ~> '{' <~ ws) ~>
         repsep(stringPair, ws ~> ',' <~ ws) <~
-      (ws ~> '}' <~ ws))
+        (ws ~> '}' <~ ws))
 
       def main = ((ws ~> '[' <~ ws) ~> repsep(stringPairs, ws ~> ',' <~ ws)
         <~ (ws ~> ']' <~ ws))
@@ -99,15 +101,15 @@ object KVParsers {
   }
 
   /**
-   * A pair string parser. Parses stuff of the form
-   * [{"name" : "...", "lastname": "..."}]
-   * just recognize, arrays hoisted out
-   */
+    * A pair string parser. Parses stuff of the form
+    * [{"name" : "...", "lastname": "..."}]
+    * just recognize, arrays hoisted out
+    */
   object KVSchemaKnownRecognize {
     /**
-     * very important to hoist out the literals
-     * gains perfs like anything!
-     */
+      * very important to hoist out the literals
+      * gains perfs like anything!
+      */
     val nameArr = "\"name\"".toCharArray
     val lastnameArr = "\"lastname\"".toCharArray
 
@@ -117,22 +119,22 @@ object KVParsers {
       def lastname = (lit(lastnameArr) <~ (ws ~> ':' <~ ws)) ~ stringLit
       def stringPairs = ((ws ~> '{' <~ ws) ~>
         (name ~ (ws ~> ',' <~ ws) ~ lastname) <~
-      (ws ~> '}' <~ ws))
+        (ws ~> '}' <~ ws))
       def main = ('[' ~> repsep(stringPairs, ws ~> ',' <~ ws) <~ ']')
     }
   }
 
   /**
-   * A pair string parser. Parses stuff of the form
-   * [{"name" : "...", "lastname": "..."}]
-   * just recognize, arrays hoisted out
-   * use `litRec`, `repSepUnit`, `skipws`
-   */
+    * A pair string parser. Parses stuff of the form
+    * [{"name" : "...", "lastname": "..."}]
+    * just recognize, arrays hoisted out
+    * use `litRec`, `repSepUnit`, `skipws`
+    */
   object KVSchemaKnownRecognizeUnit {
     /**
-     * very important to hoist out the literals
-     * gains perfs like anything!
-     */
+      * very important to hoist out the literals
+      * gains perfs like anything!
+      */
     val nameArr = "\"name\"".toCharArray
     val lastnameArr = "\"lastname\"".toCharArray
 
@@ -143,16 +145,16 @@ object KVParsers {
       def lastname: Parser[Unit] = (litRec(lastnameArr) <~ colon) <~ stringLitRec
       def stringPairs: Parser[Unit] = ((ws ~> '{' <~ ws) ~>
         (name ~> (ws ~> ',' <~ ws) ~> lastname) <~
-      (ws ~> '}' <~ ws))
+        (ws ~> '}' <~ ws))
       def main: Parser[Unit] = ('[' ~> repSepUnit(stringPairs, ws ~> ',' <~ ws) <~ ']')
     }
   }
 
   /**
-   * A pair string parser. Parses stuff of the form
-   * [{"..." : "...", "...": "..."}]
-   * recognizes a pair and throws out the key
-   */
+    * A pair string parser. Parses stuff of the form
+    * [{"..." : "...", "...": "..."}]
+    * recognizes a pair and throws out the key
+    */
   object KVRecognizeGetValue {
     lazy val parser = FastParsersCharArray {
       def ws = whitespaces
@@ -160,7 +162,7 @@ object KVParsers {
 
       def stringPairs = ((ws ~> '{' <~ ws) ~>
         repsep(stringPair, ws ~> ',' <~ ws) <~
-      (ws ~> '}' <~ ws))
+        (ws ~> '}' <~ ws))
 
       def main = ('[' ~> repsep(stringPairs, ws ~> ',' <~ ws) <~ ']')
     }
@@ -169,22 +171,23 @@ object KVParsers {
   object KVRecognizeAndGetValueAtPairTime {
     lazy val parser = FastParsersCharArray {
       def ws = whitespaces
-      def stringPair = ((stringLit ~ (ws ~> ':' <~ ws)) ~ stringLit) map (x => x._1)
+      def stringPair = ((stringLit ~ (ws ~> ':' <~ ws)) ~ stringLit) map (
+        x => x._1)
 
       def stringPairs = ((ws ~> '{' <~ ws) ~>
         repsep(stringPair, ws ~> ',' <~ ws) <~
-      (ws ~> '}' <~ ws))
+        (ws ~> '}' <~ ws))
 
       def main = ('[' ~> repsep(stringPairs, ws ~> ',' <~ ws) <~ ']')
     }
   }
 
   /**
-   * A pair string parser. Parses stuff of the form
-   * [{"..." : "...", "...": "..."}]
-   * using takeWhile2, which does not inline its function
-   * just recognize
-   */
+    * A pair string parser. Parses stuff of the form
+    * [{"..." : "...", "...": "..."}]
+    * using takeWhile2, which does not inline its function
+    * just recognize
+    */
   object KVRecognizeTakeWhile2 {
     lazy val parser = FastParsersCharArray {
       def ws = takeWhile2(x => x == ' ' || x == '\n')
@@ -192,7 +195,7 @@ object KVParsers {
 
       def stringPairs = ((ws ~> '{' <~ ws) ~>
         repsep(stringPair, ws ~> ',' <~ ws) <~
-      (ws ~> '}' <~ ws))
+        (ws ~> '}' <~ ws))
 
       def main = ((ws ~> '[' <~ ws) ~> repsep(stringPairs, ws ~> ',' <~ ws)
         <~ (ws ~> ']' <~ ws))
@@ -200,13 +203,13 @@ object KVParsers {
   }
 
   /**
-   * A pair string parser. Parses stuff of the form
-   * [{"..." : "...", "...": "..."}]
-   * using takeWhile2, which does not inline its function
-   * This time we hoist the closure out. Maybe this triggers
-   * inlining on the JVM?
-   * just recognize
-   */
+    * A pair string parser. Parses stuff of the form
+    * [{"..." : "...", "...": "..."}]
+    * using takeWhile2, which does not inline its function
+    * This time we hoist the closure out. Maybe this triggers
+    * inlining on the JVM?
+    * just recognize
+    */
   object KVRecognizeTakeWhile2Hoisted {
     def isWS(c: Char) = (c == ' ' || c == '\n')
 
@@ -216,7 +219,7 @@ object KVParsers {
 
       def stringPairs = ((ws ~> '{' <~ ws) ~>
         repsep(stringPair, ws ~> ',' <~ ws) <~
-      (ws ~> '}' <~ ws))
+        (ws ~> '}' <~ ws))
 
       def main = ((ws ~> '[' <~ ws) ~> repsep(stringPairs, ws ~> ',' <~ ws)
         <~ (ws ~> ']' <~ ws))
@@ -224,10 +227,10 @@ object KVParsers {
   }
 
   /**
-   * A pair string parser. Parses stuff of the form
-   * [{"..." : "...", "...": "..."}]
-   * using takeWhile3, which inlines its function
-   */
+    * A pair string parser. Parses stuff of the form
+    * [{"..." : "...", "...": "..."}]
+    * using takeWhile3, which inlines its function
+    */
   object KVRecognizeTakeWhile3 {
     lazy val parser = FastParsersCharArray {
       def ws = takeWhile3(x => x == ' ' || x == '\n')
@@ -235,7 +238,7 @@ object KVParsers {
 
       def stringPairs = ((ws ~> '{' <~ ws) ~>
         repsep(stringPair, ws ~> ',' <~ ws) <~
-      (ws ~> '}' <~ ws))
+        (ws ~> '}' <~ ws))
 
       def main = ((ws ~> '[' <~ ws) ~> repsep(stringPairs, ws ~> ',' <~ ws)
         <~ (ws ~> ']' <~ ws))
@@ -243,11 +246,11 @@ object KVParsers {
   }
 
   /**
-   * A pair string parser. Parses stuff of the form
-   * [{"..." : "...", "...": "..."}]
-   * just recognize, use WSSKip instead of creating
-   * intermediate structs
-   */
+    * A pair string parser. Parses stuff of the form
+    * [{"..." : "...", "...": "..."}]
+    * just recognize, use WSSKip instead of creating
+    * intermediate structs
+    */
   object KVRecognizeWSSkip {
     lazy val parser = FastParsersCharArray {
       def ws: Parser[Unit] = skipws
@@ -255,7 +258,7 @@ object KVParsers {
 
       def stringPairs = ((ws ~> '{' <~ ws) ~>
         repsep(stringPair, ws ~> ',' <~ ws) <~
-      (ws ~> '}' <~ ws))
+        (ws ~> '}' <~ ws))
 
       def main = ((ws ~> '[' <~ ws) ~> repsep(stringPairs, ws ~> ',' <~ ws)
         <~ (ws ~> ']' <~ ws))
@@ -263,11 +266,11 @@ object KVParsers {
   }
 
   /**
-   * A pair string parser. Parses stuff of the form
-   * [{"..." : "...", "...": "..."}]
-   * just recognize, use WSSKip and stringLitRec
-   * instead of creating intermediate structs
-   */
+    * A pair string parser. Parses stuff of the form
+    * [{"..." : "...", "...": "..."}]
+    * just recognize, use WSSKip and stringLitRec
+    * instead of creating intermediate structs
+    */
   object KVRecognizeRecWSSKip {
     lazy val parser = FastParsersCharArray {
       def ws = skipws
@@ -276,7 +279,7 @@ object KVParsers {
 
       def stringPairs = ((ws ~> '{' <~ ws) ~>
         repsep(stringPair, ws ~> ',' <~ ws) <~
-      (ws ~> '}' <~ ws))
+        (ws ~> '}' <~ ws))
 
       def main = ((ws ~> '[' <~ ws) ~> repsep(stringPairs, ws ~> ',' <~ ws)
         <~ (ws ~> ']' <~ ws))
@@ -284,10 +287,10 @@ object KVParsers {
   }
 
   /**
-   * A pair string parser. Parses stuff of the form
-   * [{"..." : "...", "...": "..."}]
-   * just recognize, project at end
-   */
+    * A pair string parser. Parses stuff of the form
+    * [{"..." : "...", "...": "..."}]
+    * just recognize, project at end
+    */
   object KVRecognizeAndGetValueAtEnd {
     lazy val parser = FastParsersCharArray {
       def ws = whitespaces
@@ -295,19 +298,20 @@ object KVParsers {
 
       def stringPairs = ((ws ~> '{' <~ ws) ~>
         repsep(stringPair, ws ~> ',' <~ ws) <~
-      (ws ~> '}' <~ ws))
+        (ws ~> '}' <~ ws))
 
-      def main = ('[' ~> repsep(stringPairs, ws ~> ',' <~ ws) <~ ']') map { ls =>
-        ls map (xs => xs map (x => x._2))
+      def main = ('[' ~> repsep(stringPairs, ws ~> ',' <~ ws) <~ ']') map {
+        ls =>
+          ls map (xs => xs map (x => x._2))
       }
     }
   }
 
   /**
-   * A pair string parser. Parses stuff of the form
-   * [{"..." : "...", "...": "..."}]
-   * just recognize, project and map to string at end
-   */
+    * A pair string parser. Parses stuff of the form
+    * [{"..." : "...", "...": "..."}]
+    * just recognize, project and map to string at end
+    */
   object KVRecognizeAndGetValueMapAtEnd {
     lazy val parser = FastParsersCharArray {
       def ws = whitespaces
@@ -315,24 +319,25 @@ object KVParsers {
 
       def stringPairs = ((ws ~> '{' <~ ws) ~>
         repsep(stringPair, ws ~> ',' <~ ws) <~
-      (ws ~> '}' <~ ws))
+        (ws ~> '}' <~ ws))
 
-      def main = ('[' ~> repsep(stringPairs, ws ~> ',' <~ ws) <~ ']') map { ls =>
-        ls map (xs => xs map (x => x._2.toString))
+      def main = ('[' ~> repsep(stringPairs, ws ~> ',' <~ ws) <~ ']') map {
+        ls =>
+          ls map (xs => xs map (x => x._2.toString))
       }
     }
   }
 
   /**
-   * A pair string parser. Parses stuff of the form
-   * [{"..." : "...", "...": "..."}]
-   * just recognize, and get value, schema known
-   */
+    * A pair string parser. Parses stuff of the form
+    * [{"..." : "...", "...": "..."}]
+    * just recognize, and get value, schema known
+    */
   object KVRecognizeAndGetValueSchemaKnown {
     /**
-     * very important to hoist out the literals
-     * gains perfs like anything!
-     */
+      * very important to hoist out the literals
+      * gains perfs like anything!
+      */
     val nameArr = "\"name\"".toCharArray
     val lastnameArr = "\"lastname\"".toCharArray
 
@@ -342,19 +347,19 @@ object KVParsers {
       def lastname = (lit(lastnameArr) <~ (ws ~> ':' <~ ws)) ~> stringLit
       def stringPairs = ((ws ~> '{' <~ ws) ~>
         (name ~ (ws ~> ',' <~ ws) ~ lastname) <~
-      (ws ~> '}' <~ ws))
+        (ws ~> '}' <~ ws))
       def main = ('[' ~> repsep(stringPairs, ws ~> ',' <~ ws) <~ ']')
     }
   }
 
   /**
-   * kv recognize, but for info on weeks
-   */
+    * kv recognize, but for info on weeks
+    */
   object KVSchemaKnownRecognizeWeeks {
     /**
-     * very important to hoist out the literals
-     * gains perfs like anything!
-     */
+      * very important to hoist out the literals
+      * gains perfs like anything!
+      */
     val wArr = "\"w\"".toCharArray
     val aArr = "\"a\"".toCharArray
     val dArr = "\"d\"".toCharArray
@@ -371,29 +376,29 @@ object KVParsers {
 
       def weekInfo = ((ws ~> '{' <~ ws) ~>
         (w ~> (ws ~> ',' <~ ws) ~>
-         a ~> (ws ~> ',' <~ ws) ~>
-         d ~> (ws ~> ',' <~ ws) ~>
-         c) <~
-      (ws ~> '}' <~ ws))
+          a ~> (ws ~> ',' <~ ws) ~>
+          d ~> (ws ~> ',' <~ ws) ~>
+          c) <~
+        (ws ~> '}' <~ ws))
 
       def weekInfos =
-       (ws ~> '[' <~ ws) ~> repsep(weekInfo, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
+        (ws ~> '[' <~ ws) ~> repsep(weekInfo, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
 
       def manyWeekInfos =
-       (ws ~> '[' <~ ws) ~> repsep(weekInfos, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
+        (ws ~> '[' <~ ws) ~> repsep(weekInfos, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
 
       def main = manyWeekInfos
     }
   }
 
-   /**
+  /**
     * kv recognize, but for info on weeks, make everything a recognizer
     */
   object KVSchemaKnownRecognizeWeeksRec {
     /**
-     * very important to hoist out the literals
-     * gains perfs like anything!
-     */
+      * very important to hoist out the literals
+      * gains perfs like anything!
+      */
     val wArr = "\"w\"".toCharArray
     val aArr = "\"a\"".toCharArray
     val dArr = "\"d\"".toCharArray
@@ -410,29 +415,29 @@ object KVParsers {
 
       def weekInfo = ((ws ~> '{' <~ ws) ~>
         (w ~> (ws ~> ',' <~ ws) ~>
-         a ~> (ws ~> ',' <~ ws) ~>
-         d ~> (ws ~> ',' <~ ws) ~>
-         c) <~
-      (ws ~> '}' <~ ws))
+          a ~> (ws ~> ',' <~ ws) ~>
+          d ~> (ws ~> ',' <~ ws) ~>
+          c) <~
+        (ws ~> '}' <~ ws))
 
       def weekInfos =
-       (ws ~> '[' <~ ws) ~> repSepUnit(weekInfo, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
+        (ws ~> '[' <~ ws) ~> repSepUnit(weekInfo, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
 
       def manyWeekInfos =
-       (ws ~> '[' <~ ws) ~> repSepUnit(weekInfos, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
+        (ws ~> '[' <~ ws) ~> repSepUnit(weekInfos, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
 
       def main = manyWeekInfos
     }
   }
 
   /**
-   * kv recognize, but for info on weeks
-   */
+    * kv recognize, but for info on weeks
+    */
   object KVSchemaKnownRecognizeWeeksADT {
     /**
-     * very important to hoist out the literals
-     * gains perfs like anything!
-     */
+      * very important to hoist out the literals
+      * gains perfs like anything!
+      */
     val wArr = "\"w\"".toCharArray
     val aArr = "\"a\"".toCharArray
     val dArr = "\"d\"".toCharArray
@@ -451,18 +456,18 @@ object KVParsers {
 
       def weekInfo: Parser[WeekInfo] = ((ws ~> '{' <~ ws) ~>
         ((w ~> (ws ~> ',' <~ ws)) ~
-         (a ~> (ws ~> ',' <~ ws)) ~
-         (d ~> (ws ~> ',' <~ ws)) ~
-         c) <~
-      (ws ~> '}' <~ ws)) map {
+          (a ~> (ws ~> ',' <~ ws)) ~
+          (d ~> (ws ~> ',' <~ ws)) ~
+          c) <~
+        (ws ~> '}' <~ ws)) map {
         case (((w, a), d), c) => WeekInfo(w.toString, a.toString, d.toString, c.toString)
       }
 
       def weekInfos =
-       (ws ~> '[' <~ ws) ~> repsep(weekInfo, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
+        (ws ~> '[' <~ ws) ~> repsep(weekInfo, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
 
       def manyWeekInfos =
-       (ws ~> '[' <~ ws) ~> repsep(weekInfos, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
+        (ws ~> '[' <~ ws) ~> repsep(weekInfos, ws ~> ',' <~ ws) <~ (ws ~> ']' <~ ws)
 
       def main = manyWeekInfos
     }
@@ -530,7 +535,7 @@ object KVParsers {
       def siteAdmin: Parser[Unit] =
         ws ~> litRec(site_admin) ~> colon ~> (
           litRec(`true`) | litRec(`false`)
-        )
+          )
 
       def authorInfo: Parser[Unit] = (braceOpen ~>
         (loginParser <~ comma) ~>
@@ -553,7 +558,7 @@ object KVParsers {
 
       def authorInfos = ((ws ~> '[' ~> ws) ~>
         repSepUnit(authorInfo, ws ~> ',' ~> ws) <~
-      (ws ~> ']' ~> ws))
+        (ws ~> ']' ~> ws))
 
       def main = authorInfos
     }
@@ -602,9 +607,9 @@ object KVParsers {
       def siteAdmin: Parser[Unit] =
         ws ~> litRec(site_admin) ~> colon ~> (
           litRec(`true`) | litRec(`false`)
-        )
+          )
 
-      def authorInfoParser = (
+      def authorInfo: Parser[AuthorInfo] = (braceOpen ~>
         (loginParser <~ comma) ~
         (idParser <~ comma) ~
         (avatarUrlP <~ comma) ~
@@ -612,30 +617,24 @@ object KVParsers {
         (urlP <~ comma) ~
         (htmlUrlP <~ comma) ~
         (followerUrlP <~ comma) ~
-        (followingUrlP <~ comma)
-      )
-
-      def authorInfoRecogniser: Parser[Unit] = (
+        (followingUrlP <~ comma) <~
         (gistUrlP <~ comma) <~
-          (starredUrlP <~ comma) <~
-          (subscriptionsUrlP <~ comma) <~
-          (organizationsUrlP <~ comma) <~
-          (reposUrlP <~ comma) <~
-          (eventsUrlP <~ comma) <~
-          (receivedEventsUrlP <~ comma) <~
-          (authorTypeP <~ comma) <~
-          siteAdmin
-      )
-
-      def authorInfo: Parser[AuthorInfo] =
-        (braceOpen ~> authorInfoParser <~ authorInfoRecogniser <~ braceClose).map {
-          case (((((((a,b),c),d),e),f),g),h) =>
-            AuthorInfo(a, b, c, d, e, f, g, h)
-        }
+        (starredUrlP <~ comma) <~
+        (subscriptionsUrlP <~ comma) <~
+        (organizationsUrlP <~ comma) <~
+        (reposUrlP <~ comma) <~
+        (eventsUrlP <~ comma) <~
+        (receivedEventsUrlP <~ comma) <~
+        (authorTypeP <~ comma) <~
+        siteAdmin <~ braceClose
+        ).map {
+        case (((((((a, b), c), d), e), f), g), h) =>
+          AuthorInfo(a, b, c, d, e, f, g, h)
+      }
 
       def authorInfos = ((ws ~> '[' ~> ws) ~>
         repSepUnit(authorInfo, ws ~> ',' ~> ws) <~
-      (ws ~> ']' ~> ws))
+        (ws ~> ']' ~> ws))
 
       def main = authorInfos
     }
@@ -644,7 +643,8 @@ object KVParsers {
   /** Parse 4 out of 17 tuples of the dataset and recognise the rest. */
   object KVSchemaKnownRecognizeAuthorPartial4 extends AuthorInfosParserHelper {
 
-    case class AuthorInfo(login: String, id: String, avatar: String, gravatar: String)
+    case class AuthorInfo(login: String, id: String, avatar: String,
+                          gravatar: String)
 
     lazy val parser = FastParsersCharArray {
 
@@ -680,33 +680,27 @@ object KVParsers {
       def siteAdmin: Parser[Unit] =
         ws ~> litRec(site_admin) ~> colon ~> (litRec(`true`) | litRec(`false`))
 
-      def authorInfoParser = (
+      def authorInfo: Parser[AuthorInfo] = (braceOpen ~>
         (loginParser <~ comma) ~
-          (idParser <~ comma) ~
-          (avatarUrlP <~ comma) ~
-          (gravatarUrlP <~ comma)
-        )
-
-      def authorInfoRecogniser: Parser[Unit] = (
+        (idParser <~ comma) ~
+        (avatarUrlP <~ comma) ~
+        (gravatarUrlP <~ comma) <~
         (urlP <~ comma) <~
-          (htmlUrlP <~ comma) <~
-          (followerUrlP <~ comma) <~
-          (followingUrlP <~ comma) <~
-          (gistUrlP <~ comma) <~
-          (starredUrlP <~ comma) <~
-          (subscriptionsUrlP <~ comma) <~
-          (organizationsUrlP <~ comma) <~
-          (reposUrlP <~ comma) <~
-          (eventsUrlP <~ comma) <~
-          (receivedEventsUrlP <~ comma) <~
-          (authorTypeP <~ comma) <~
-          siteAdmin
-        )
-
-      def authorInfo: Parser[AuthorInfo] =
-        (braceOpen ~> authorInfoParser <~ authorInfoRecogniser <~ braceClose).map {
-          case (((a,b),c),d) => AuthorInfo(a, b, c, d)
-        }
+        (htmlUrlP <~ comma) <~
+        (followerUrlP <~ comma) <~
+        (followingUrlP <~ comma) <~
+        (gistUrlP <~ comma) <~
+        (starredUrlP <~ comma) <~
+        (subscriptionsUrlP <~ comma) <~
+        (organizationsUrlP <~ comma) <~
+        (reposUrlP <~ comma) <~
+        (eventsUrlP <~ comma) <~
+        (receivedEventsUrlP <~ comma) <~
+        (authorTypeP <~ comma) <~
+        siteAdmin <~ braceClose
+        ).map {
+        case (((a, b), c), d) => AuthorInfo(a, b, c, d)
+      }
 
       def authorInfos = ((ws ~> '[' ~> ws) ~>
         repSepUnit(authorInfo, ws ~> ',' ~> ws) <~
@@ -761,34 +755,28 @@ object KVParsers {
       def siteAdmin: Parser[Unit] =
         ws ~> litRec(site_admin) ~> colon ~> (litRec(`true`) | litRec(`false`))
 
-      def authorInfoParser = (
+      def authorInfo: Parser[AuthorInfo] = (braceOpen ~>
         (loginParser <~ comma) ~
-          (idParser <~ comma) ~
-          (avatarUrlP <~ comma) ~
-          (gravatarUrlP <~ comma) ~
-          (urlP <~ comma) ~
-          (htmlUrlP <~ comma) ~
-          (followerUrlP <~ comma) ~
-          (followingUrlP <~ comma) ~
-          (gistUrlP <~ comma) ~
-          (starredUrlP <~ comma) ~
-          (subscriptionsUrlP <~ comma) ~
-          (organizationsUrlP <~ comma)
-        )
-
-      def authorInfoRecogniser: Parser[Unit] = (
-          (reposUrlP <~ comma) <~
-          (eventsUrlP <~ comma) <~
-          (receivedEventsUrlP <~ comma) <~
-          (authorTypeP <~ comma) <~
-          siteAdmin
-        )
-
-      def authorInfo: Parser[AuthorInfo] =
-        (braceOpen ~> authorInfoParser <~ authorInfoRecogniser <~ braceClose).map {
-          case (((((((((((a,b),c),d),e),f),g),h),i),j),k),l) =>
-            AuthorInfo(a, b, c, d, e, f, g, h, i, j, k, l)
-        }
+        (idParser <~ comma) ~
+        (avatarUrlP <~ comma) ~
+        (gravatarUrlP <~ comma) ~
+        (urlP <~ comma) ~
+        (htmlUrlP <~ comma) ~
+        (followerUrlP <~ comma) ~
+        (followingUrlP <~ comma) ~
+        (gistUrlP <~ comma) ~
+        (starredUrlP <~ comma) ~
+        (subscriptionsUrlP <~ comma) ~
+        (organizationsUrlP <~ comma) <~
+        (reposUrlP <~ comma) <~
+        (eventsUrlP <~ comma) <~
+        (receivedEventsUrlP <~ comma) <~
+        (authorTypeP <~ comma) <~
+        siteAdmin <~ braceClose
+      ).map {
+        case (((((((((((a, b), c), d), e), f), g), h), i), j), k), l) =>
+          AuthorInfo(a, b, c, d, e, f, g, h, i, j, k, l)
+      }
 
       def authorInfos = ((ws ~> '[' ~> ws) ~>
         repSepUnit(authorInfo, ws ~> ',' ~> ws) <~
@@ -797,4 +785,5 @@ object KVParsers {
       def main = authorInfos
     }
   }
+
 }
