@@ -2,12 +2,13 @@ package fastparsers.parsers
 
 import fastparsers.input.ParseInput
 import fastparsers.error.ParseError
+import fastparsers.tools.TreeTools
 
 /**
  * Created by Eric on 22.04.14.
  * Implementation of RepParsers
  */
-trait RepParsersImpl extends ParserImplBase { self: ParseInput with ParseError =>
+trait RepParsersImpl extends ParserImplBase with TreeTools { self: ParseInput with ParseError =>
 
   import c.universe._
 
@@ -18,9 +19,11 @@ trait RepParsersImpl extends ParserImplBase { self: ParseInput with ParseError =
     case q"$_.repN[$d]($a,$n)"                    => parseRep(a, d, n, n, rs)
     case q"$_.opt[$d]($a)"                        => parseOpt(a, d, rs)
     case q"$_.repsep[$typ,$d]($a,$b)"             => parseRepsep(a, b, typ, atLeastOnce = false, rs)
+    case q"$_.repSepUnit[$typ,$d]($a,$b)"         => parseRepSepUnit(a, b, typ, atLeastOnce = false, rs)
     case q"$_.repsep1[$typ,$d]($a,$b)"            => parseRepsep(a, b, typ, atLeastOnce = true, rs)
     case q"$_.until[$typ,$d]($a,$b)"              => parseUntil(a, b, typ, rs)
     case q"$a foldLeft[$d]($init,$f)"             => parseFoldLeft(a, init, f, d, rs)
+    case q"$a foldLeft2[$d]($init,$f)"            => parseFoldLeft2(a, init, f, d, rs)
     case q"$a foldRight[$d,$ptype]($init,$f)"     => parseFoldRight(a, init, f, d, ptype, rs)
     case q"$a reduceLeft[$d]($f)"                 => parseReduceLeft(a, f, d, rs)
     case q"$a reduceRight[$d]($f)"                => parseReduceRight(a, f, d, rs)
@@ -172,6 +175,52 @@ trait RepParsersImpl extends ParserImplBase { self: ParseInput with ParseError =
     """
   }
 
+  private def parseRepSepUnit(a: c.Tree, sep: c.Tree, typ: c.Tree, atLeastOnce: Boolean, rs: ResultsStruct) = {
+    var results_tmp = rs.temporary
+    var results_tmp2 = rs.temporary
+    val cont = TermName(c.freshName)
+    val tmp_result = TermName(c.freshName)
+    val result = rs.newVar(tq"Unit")
+
+    val innertree2 = mark {  rollback =>
+        q"""
+          ${expand(sep, results_tmp2)}
+           if (!$success) {
+            $cont = false
+            $rollback
+           }
+        """
+    }
+
+    val innertree1 = mark { rollback =>
+        q"""
+          ${expand(a, results_tmp)}
+          if ($success) {
+             $innertree2
+          }
+          else {
+            $cont = false
+            $rollback
+          }
+         """
+    }
+
+    val assignSuccess =
+        q"""
+          ${rs.assignTo(result, q"$UNIT")}
+          $success = true
+        """
+
+    q"""
+      var $cont = true
+      val $tmp_result = $UNIT
+      while($cont) {
+        $innertree1
+      }
+      $assignSuccess
+    """
+  }
+
   private def parseUntil(a: c.Tree, end: c.Tree, typ: c.Tree, rs: ResultsStruct) = {
     var results_tmp = rs.temporary
 
@@ -219,12 +268,15 @@ trait RepParsersImpl extends ParserImplBase { self: ParseInput with ParseError =
     val tmp_f = TermName(c.freshName)
     val result = rs.newVar(typ)
 
+    def call = q"$tmp_f($result, ${results_tmp.combine})"
+
     val inner = mark {
       rollback =>
         q"""
         ${expand(a, results_tmp)}
          if ($success){
-           ${rs.assignTo(result, q"$tmp_f($result,${results_tmp.combine})")}
+          ${rs.assignTo(result, call)}
+           //successBody
           }
          else {
           $cont = false
@@ -234,6 +286,42 @@ trait RepParsersImpl extends ParserImplBase { self: ParseInput with ParseError =
     }
     q"""
       val $tmp_f = $f
+      var $cont = true
+      ${rs.assignTo(result, init)}
+      while($cont){
+        $inner
+      }
+      $success = true
+    """
+  }
+
+  /**
+   * We inline the body of the combine function rather than apply it here
+   */
+  private def parseFoldLeft2(a: c.Tree, init: c.Tree, f: c.Tree, typ: c.Tree, rs: ResultsStruct) = {
+    var results_tmp = rs.temporary
+    val cont = TermName(c.freshName)
+    val tmp_f = TermName(c.freshName)
+    val result = rs.newVar(typ)
+
+    def call = inline(f, List(q"$result", q"${results_tmp.combine}"))
+
+    val inner = mark {
+      rollback =>
+        q"""
+        ${expand(a, results_tmp)}
+         if ($success){
+          ${rs.assignTo(result, call)}
+           //successBody
+          }
+         else {
+          $cont = false
+          $rollback
+         }
+      """
+    }
+
+    q"""
       var $cont = true
       ${rs.assignTo(result, init)}
       while($cont){

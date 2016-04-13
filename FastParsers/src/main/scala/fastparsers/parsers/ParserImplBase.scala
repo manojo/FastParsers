@@ -15,6 +15,11 @@ trait ParserImplBase { self: ParseInput with ParseError =>
   import c.universe._
 
   /**
+   * CONSTANTS
+   */
+  final val UNIT: Unit = ()
+
+  /**
    * Represent a result variable
    * _1 : Variable name
    * _2 : Variable type
@@ -80,8 +85,7 @@ trait ParserImplBase { self: ParseInput with ParseError =>
       }
       else if (usedResults.size == 1)
         q"${usedResults(0)._1}"
-      else
-        q"Nil"
+      else q"Nil" //throw new Error("no result found")
     }
 
   def combineType: c.Tree = {

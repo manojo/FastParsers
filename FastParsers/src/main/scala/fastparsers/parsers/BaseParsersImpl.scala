@@ -3,11 +3,12 @@ package fastparsers.parsers
 import fastparsers.input._
 import fastparsers.framework._
 import fastparsers.error.ParseError
+import fastparsers.tools.TreeTools
 
 /**
  * Implementation of Basic combinators
  */
-trait BaseParsersImpl extends ParserImplBase {
+trait BaseParsersImpl extends ParserImplBase with TreeTools {
     self: ParseInput with ParseError with IgnoreResultsPolicy =>
 
   import c.universe._
@@ -25,6 +26,7 @@ trait BaseParsersImpl extends ParserImplBase {
     case q"$_.guard[$d]($a)"       => parseGuard(a, d, rs)
     case q"$_.takeWhile($f)"       => parseTakeWhile(f, rs)
     case q"$_.takeWhile2($f)"      => parseTakeWhile2(f, rs)
+    case q"$_.takeWhile3($f)"      => parseTakeWhile3(f, rs)
     case q"$_.take($n)"            => parseTake(n, rs)
     case q"$_.raw[$d]($a)"         => parseRaw(a,rs)
     case q"$_.phrase[$d]($a)"      => parsePhrase(a, rs)
@@ -207,6 +209,33 @@ trait BaseParsersImpl extends ParserImplBase {
       val $beginpos = $pos
       while ($isNEOI && $tmp_f($currentInput))
         $advance
+      ${rs.assignNew(getInputWindow(q"$beginpos", q"$pos"), inputWindowType)}
+      $success = true
+    """
+  }
+
+  /**
+   * Inlines the predicate function given as parameter.
+   */
+  private def parseTakeWhile3(f: c.Tree, rs: ResultsStruct) = {
+    import c.internal._, decorators._
+
+    val tmp_f = TermName(c.freshName)
+    val beginpos = TermName(c.freshName)
+
+    def call = inline(f, List(q"$currentInput"))
+    val cont = TermName(c.freshName)
+
+    q"""
+      val $beginpos = $pos
+
+      var $cont = true
+      while ($cont) {
+        if ($isNEOI) {
+          if ($call) { $advance } else { $cont = false }
+        } else { $cont = false }
+      }
+
       ${rs.assignNew(getInputWindow(q"$beginpos", q"$pos"), inputWindowType)}
       $success = true
     """

@@ -29,4 +29,14 @@ trait TokenParsers[StringRepr] {
   @compileTimeOnly("can't be used outside FastParser")
   def whitespaces: Parser[InputWindow[StringRepr]] = ???
 
+  @compileTimeOnly("can't be used outside FastParser")
+  def stringLitRec: Parser[Unit] = ???
+
+  @compileTimeOnly("can't be used outside FastParser")
+  def skipws: Parser[Unit] = ???
+
+  @compileTimeOnly("can't be used outside FastParser")
+  def litRec(str: StringRepr): Parser[Unit] = ???
+
+
 }

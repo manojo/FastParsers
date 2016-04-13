@@ -1,24 +1,27 @@
 package fastparsers.parsers
 
-import fastparsers.input.StringLikeInput
+import fastparsers.input.ArrayLikeInput
 import fastparsers.error.ParseError
 
 /**
  * Created by Eric on 22.04.14.
  * Implementation of TokenParsers
  */
-trait TokenParsersImpl extends ParserImplBase { self: StringLikeInput  with ParseError =>
+trait TokenParsersImpl extends ParserImplBase { self: ArrayLikeInput with ParseError =>
 
   import c.universe._
 
   override def expand(tree: c.Tree, rs: ResultsStruct) = tree match {
     case q"$_.lit($str)"     => parseLit(str, rs)
+    case q"$_.litRec($str)"     => parseLit(str, rs)
     case q"$_.ident"         => parseIdentifier(rs)
     case q"$_.stringLit"     => parseStringLit(rs)
+    case q"$_.stringLitRec"  => parseStringLitRec(rs)
     case q"$_.number"        => parseNumber(rs)
     case q"$_.decimalNumber" => parseDecimalNumber(rs)
     case q"$_.whitespaces"   => parseWhiteSpaces(rs)
-    case _                            => super.expand(tree, rs)
+    case q"$_.skipws"        => parseSkipWS(rs)
+    case _                   => super.expand(tree, rs)
   }
 
   override def prettyPrint(tree: c.Tree) = tree match {
@@ -28,7 +31,7 @@ trait TokenParsersImpl extends ParserImplBase { self: StringLikeInput  with Pars
     case q"$_.number"        => "number"
     case q"$_.decimalNumber" => "decimalNumber"
     case q"$_.whitespaces"   => "whitespaces"
-    case _                            => super.prettyPrint(tree)
+    case _                   => super.prettyPrint(tree)
   }
 
   private def skipWhiteSpace = {
@@ -64,6 +67,34 @@ trait TokenParsersImpl extends ParserImplBase { self: StringLikeInput  with Pars
     """
     }
   }
+
+  private def parseLitRec(str: c.Tree, rs: ResultsStruct) = {
+    val tmpstr = TermName(c.freshName)
+    val litsize = TermName(c.freshName)
+    val i = TermName(c.freshName)
+    //error = "`" + $str + "' expected but " + (if ($isEOI) "EOF" else $currentInput) + " found at " + $pos
+    mark { rollback =>
+     q"""
+      var $i = 0
+      val $litsize = $str.length
+      $skipWhiteSpace
+      while ($isNEOI && $i < $litsize && $currentInput == $str.charAt($i)){
+        $i = $i + 1
+        $advance
+      }
+      if ($i == $litsize){
+        $success = true
+        ${rs.assignNew(str, typeOf[Unit])}
+      }
+      else {
+        $success = false
+        ${pushError("`" + show(str) + "' expected but ... found", pos)}
+        $rollback
+      }
+    """
+    }
+  }
+
 
   private def parseIdentifier(rs: ResultsStruct) = {
     val beginpos = TermName(c.freshName)
@@ -106,6 +137,45 @@ trait TokenParsersImpl extends ParserImplBase { self: StringLikeInput  with Pars
           $success = true
           $advance
           ${rs.assignNew(getInputWindow(q"$beginpos + 1", q"$pos - 1"), inputWindowType)}
+        }
+        else {
+          $success = false
+          ${pushError("expected '\"' got EOF", pos)}
+          $rollback
+        }
+      }
+      else {
+        $success = false
+        ${pushError("expected '\"' got EOF", pos)}
+        $rollback
+      }
+    """
+    }
+  }
+
+  /**
+   * Recognizes a string literal, does not even bother to
+   * construct any struct
+   */
+  private def parseStringLitRec(rs: ResultsStruct) = {
+    val beginpos = TermName(c.freshName)
+    mark { rollback =>
+     q"""
+      $skipWhiteSpace
+      val $beginpos = $pos
+      if ($isNEOI && $currentInput == '\"'){
+        $advance
+        while ($isNEOI && $currentInput != '\"'){
+          if ($currentInput == '\\'){
+            $advance
+          }
+          $advance
+        }
+
+        if ($isNEOI) {
+          $success = true
+          $advance
+          ${rs.assignNew(q"$UNIT", typeOf[Unit])}
         }
         else {
           $success = false
@@ -191,11 +261,18 @@ trait TokenParsersImpl extends ParserImplBase { self: StringLikeInput  with Pars
 
   private def parseWhiteSpaces(rs: ResultsStruct) = {
     val beginpos = TermName(c.freshName)
-    val result = TermName(c.freshName)
     q"""
       val $beginpos = $pos
       $skipWhiteSpace
       ${rs.assignNew(getInputWindow(q"$beginpos", q"$pos"), inputWindowType)}
+      $success = true
+    """
+  }
+
+  private def parseSkipWS(rs: ResultsStruct) = {
+    q"""
+      $skipWhiteSpace
+      ${rs.assignNew(q"$UNIT", typeOf[Unit])}
       $success = true
     """
   }
