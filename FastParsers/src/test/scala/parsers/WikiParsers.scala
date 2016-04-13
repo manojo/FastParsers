@@ -166,9 +166,6 @@ object WikiParsers {
   val version = "version=".toCharArray
   val lang = "xml:lang=".toCharArray
 
-
-
-
   object FullWikiParser {
     lazy val parser = FastParsersCharArray {
 

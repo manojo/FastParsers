@@ -67,7 +67,6 @@ class FastPrintersImpl(val c: Context)
 }
 
 object TransformedPrinters extends FastParserSuperTrait {
-
   def FastParser(rules: => Unit): FinalFastParserImpl =
     macro TransformedPrintersImpl.FastParser
 }
@@ -79,6 +78,7 @@ class TransformedPrintersImpl(val c: Context)
     extends BaseImpl
     with RulesTransformer
     with ParseQuery
+    with ParseRules
     with FullParseQueryImpl
     with BaseParsersImpl
     with RepParsersImpl
