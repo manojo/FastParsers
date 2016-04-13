@@ -18,7 +18,7 @@ object Calculator {
       case Some((op,y)) => op(x._1,y)
     }
 
-    val code = FastParser{
+    val code = FastParser {
       def op1 = lit("+") ^^^ ((x:Int,y:Int) => x + y) |
                 lit("-") ^^^ ((x:Int,y:Int) => x - y)
 

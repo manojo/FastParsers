@@ -34,13 +34,13 @@ object WikiParsers {
     title: String,
     ns: Int,
     id: Int,
-    redirect: Option[InputWindow[Array[Char]]],
+    redirect: Option[String],
     rev: Revision
   )
 
   case class Namespace(
-    key: InputWindow[Array[Char]],
-    cs: InputWindow[Array[Char]],
+    key: String,
+    cs: String,
     content: String
   )
 
@@ -55,7 +55,7 @@ object WikiParsers {
 
   case class RelevantInfo(
     title: String,
-    redirectTitle: Option[InputWindow[Array[Char]]],
+    redirectTitle: Option[String],
     timeStamp: TimeStamp,
     contributor: String,
     text: String
@@ -79,352 +79,446 @@ object WikiParsers {
     )
   }
 
-  val fullWikiParser = FastParsersCharArray {
-    def ws = whitespaces
-    def wsWrap(p: Parser[Array[Char]]): Parser[Array[Char]] =  ws ~> p <~ ws
+  val titleOpen = "<title>".toCharArray
+  val titleClose = "</title>".toCharArray
 
-    def digit2Int: Parser[Int] =
-      acceptIf(c => c >= '0' && c <= '9') map { c => (c - '0').toInt }
+  val restrictionsOpen = "<restrictions>".toCharArray
+  val restrictionsClose = "</restrictions>".toCharArray
 
-    def numAsInt: Parser[Int] =
-      digit2Int.foldLeft[Int](0, (acc, d) => acc * 10 + d)
+  val nsOpen = "<ns>".toCharArray
+  val nsClose = "</ns>".toCharArray
 
-    def title: Parser[String] = ((ws ~> ("<title>".toCharArray) <~ws) ~>
-      takeWhile(_ != '<')
-    <~ (ws ~> "</title>".toCharArray <~ ws)) map (_.mkString)
+  val idOpen = "<id>".toCharArray
+  val idClose = "</id>".toCharArray
 
-    def ns: Parser[Int] = (ws ~> "<ns>".toCharArray <~ ws) ~> numAsInt <~ (ws ~> "</ns>".toCharArray <~ ws)
-    def id: Parser[Int] = (ws ~> "<id>".toCharArray <~ ws) ~> numAsInt <~ (ws ~> "</id>".toCharArray <~ ws)
-    def restrictions: Parser[String] = ((ws ~> "<restrictions>".toCharArray <~ ws) ~>
-      takeWhile(_ != '<')
-    <~ (ws ~> "</restrictions>".toCharArray <~ ws)) map (_.toString)
+  val redirectOpen = "<redirect".toCharArray
+  val titleEq = "title=".toCharArray
+  val singleClose = "/>".toCharArray
 
-    def redirect: Parser[InputWindow[Array[Char]]] = ((ws ~> "<redirect".toCharArray <~ ws) ~>
-      (ws ~> "title=".toCharArray <~ ws) ~> stringLit
-    <~ (ws ~> "/>".toCharArray <~ ws))
+  val parentIdOpen = "<parentid>".toCharArray
+  val parentIdClose = "</parentid>".toCharArray
 
-    def parentid: Parser[Int] =
-      (ws ~> "<parentid>".toCharArray <~ ws) ~> numAsInt <~ (ws ~> "</parentid>".toCharArray <~ ws)
+  val timestampOpen = "<timestamp>".toCharArray
+  val timestampClose =  "</timestamp>".toCharArray
 
-    /**
-     * datetime parser
-     * for now we assume all is given in UTC. We should extend
-     * with extra stuff if needed.
-     * @see http://www.w3schools.com/xml/schema_dtypes_date.asp
-     * for details
-     */
-    def year: Parser[Int] = rep(digit2Int, 4, 4) map {
-      ls => ls.foldLeft[Int](0)((acc, d) => acc * 10 + d)
-    }
+  val usernameOpen = "<username>".toCharArray
+  val usernameClose = "</username>".toCharArray
 
-    def nn: Parser[Int] = rep(digit2Int, 2, 2) map {
-      ls => ls.foldLeft[Int](0)((acc, d) => acc * 10 + d)
-    }
+  val contributorOpen = "<contributor>".toCharArray
+  val contributorClose = "</contributor>".toCharArray
 
-    /**
-     * seems to be some bug in the unapply of ~, @TODO investigate
-     */
-    def timestamp: Parser[TimeStamp] = ((ws ~> "<timestamp>".toCharArray <~ ws) ~>
-        year ~ ('-' ~> nn) ~ ('-' ~> nn) ~
-        ('T' ~> nn) ~ (':' ~> nn) ~ (':' ~> nn) <~ 'Z'
-      <~ (ws ~> "</timestamp>".toCharArray <~ ws)) map { case (((((yr, mnth), day), hh), mm), ss) =>
-      TimeStamp(yr, mnth, day, hh, mm, ss)
-    }
+  val minorArr = "<minor />".toCharArray
 
-    def username: Parser[String] = ((ws ~> "<username>".toCharArray <~ ws) ~>
-      takeWhile(_ != '<') <~ (ws ~> "</username>".toCharArray <~ ws)
-    ) map (_.mkString)
+  val commentOpen = "<comment>".toCharArray
+  val commentClose = "</comment>".toCharArray
 
-    def contributor: Parser[Contributor] = (
-      (ws ~> "<contributor>".toCharArray <~ ws) ~> username ~ id <~ (ws ~> "</contributor>".toCharArray <~ ws)
-    ) map { (Contributor.apply _).tupled }
+  val modelOpen = "<model>".toCharArray
+  val modelClose = "</model>".toCharArray
 
-    def minor: Parser[Boolean] =  opt((ws ~> "<minor />".toCharArray <~ ws)) map { _.isDefined }
+  val formatOpen = "<format>".toCharArray
+  val formatClose = "</format>".toCharArray
 
-    def comment: Parser[String] = ((ws ~> "<comment>".toCharArray <~ ws) ~>
-      takeWhile(_ != '<')
-    <~ (ws ~> "</comment>".toCharArray <~ ws)) map (_.mkString)
+  val textOpen = "<text xml:space=\"preserve\">".toCharArray
+  val textClose = "</text>".toCharArray
 
-    def model: Parser[String] = ((ws ~> "<model>".toCharArray <~ ws) ~>
-      takeWhile(_ != '<')
-    <~ (ws ~> "</model>".toCharArray <~ ws)) map (_.mkString)
+  val shaOpen = "<sha1>".toCharArray
+  val shaClose = "</sha1>".toCharArray
 
+  val revisionOpen = "<revision>".toCharArray
+  val revisionClose = "</revision>".toCharArray
 
-    def format: Parser[String] = ((ws ~> "<format>".toCharArray <~ ws) ~>
-      takeWhile(_ != '<') <~ (ws ~> "</format>".toCharArray <~ ws)
-    ) map (_.mkString)
+  val pageOpen = "<page>".toCharArray
+  val pageClose = "</page>".toCharArray
 
-    /**
-     * @TODO we could explore the xml:space tag more if
-     * required. Check the specification.
-     */
-    def text: Parser[String] = (wsWrap("<text xml:space=\"preserve\">".toCharArray) ~>
-      takeWhile(_ != '<')
-    <~ (ws ~> "</text>".toCharArray <~ ws)) map (_.mkString)
+  val sitenameOpen = "<sitename>".toCharArray
+  val sitenameClose = "</sitename>".toCharArray
 
-    /**
-     * @TODO seems that the sha1 in this doc is represented in base 36,
-     * didn't find enough info atm regarding this. So leaving it as a
-     * Parser[String]
-     */
-    def sha1: Parser[String] = ((ws ~> "<sha1>".toCharArray <~ ws) ~>
-      takeWhile(_ != '<') <~ (ws ~> "</sha1>".toCharArray <~ ws)
-    ) map (_.mkString)
+  val dbnameOpen = "<dbname>".toCharArray
+  val dbnameClose = "</dbname>".toCharArray
 
-    def revision: Parser[Revision] = ((ws ~> "<revision>".toCharArray <~ ws) ~>
-      id ~ parentid ~ timestamp ~
-      contributor ~ minor ~ opt(comment) ~ model ~ format ~
-      text ~ sha1
-    <~ (ws ~> "</revision>".toCharArray <~ ws)) map {
-      case (((((((((id, pid), ts), cntr), mnr), cmt), mdl), fmt), txt), sha) =>
-        Revision(id, pid, ts, cntr, mnr, cmt, mdl, fmt, txt, sha)
-    }
+  val baseOpen = "<base>".toCharArray
+  val baseClose = "</base>".toCharArray
 
-    /**
-     * And finally, the page
-     */
-    def page = ((ws ~> "<page>".toCharArray <~ ws) ~>
-      title ~ ns ~ id ~ opt(restrictions) ~ opt(redirect) ~ revision
-    <~ (ws ~> "</page>".toCharArray <~ ws)) map {
-      case (((((t, ns), id), _), red), rev) => Page(t, ns, id, red, rev)
-    }
+  val generatorOpen = "<generator>".toCharArray
+  val generatorClose = "</generator>".toCharArray
 
-    def sitename: Parser[String] = ((ws ~> "<sitename>".toCharArray <~ ws) ~>
-      takeWhile(_ != '<') <~ (ws ~> "</sitename>".toCharArray <~ ws)
-    ) map (_.mkString)
+  val caseOpen = "<case>".toCharArray
+  val caseClose = "</case>".toCharArray
 
-    def dbname: Parser[String] = ((ws ~> "<dbname>".toCharArray <~ ws) ~>
-      takeWhile(_ != '<')
-    <~ (ws ~> "</dbname>".toCharArray <~ ws)) map (_.mkString)
+  val namespaceOpen = "<namespace".toCharArray
+  val namespaceClose = "</namespace>".toCharArray
+
+  val keyEq = "key=".toCharArray
+  val caseEq = "case=".toCharArray
+
+  val namespacesOpen = "<namespaces>".toCharArray
+  val namespacesClose = "</namespaces>".toCharArray
+
+  val siteinfoOpen = "<siteinfo>".toCharArray
+  val siteinfoClose = "</siteinfo>".toCharArray
+
+  val mediawikiOpen = "<mediawiki".toCharArray
+  val mediawikiClose = "</mediawiki>".toCharArray
+
+  val xmlns = "xmlns=".toCharArray
+  val xmlnsxsi = "xmlns:xsi=".toCharArray
+  val schemaLocation = "xsi:schemaLocation=".toCharArray
+  val version = "version=".toCharArray
+  val lang = "xml:lang=".toCharArray
 
 
-    def base: Parser[String] = ((ws ~> "<base>".toCharArray <~ ws) ~>
-      takeWhile(_ != '<')
-    <~ (ws ~> "</base>".toCharArray <~ ws)) map (_.mkString)
 
-    def generator: Parser[String] = ((ws ~> "<generator>".toCharArray <~ ws) ~>
-      takeWhile(_ != '<')
-    <~ (ws ~> "</generator>".toCharArray <~ ws)) map (_.mkString)
 
-    def cs: Parser[String] = ((ws ~> "<case>".toCharArray <~ ws) ~>
-      takeWhile(_ != '<')
-    <~ (ws ~> "</case>".toCharArray <~ ws)) map (_.mkString)
+  object FullWikiParser {
+    lazy val parser = FastParsersCharArray {
 
-    def namespace1: Parser[Namespace] = ((ws ~> "<namespace".toCharArray <~ ws) ~>
-      ((ws ~> "key=".toCharArray <~ ws) ~> stringLit) ~ ((ws ~> "case=".toCharArray <~ ws) ~> stringLit)
-    ~ ((ws ~> ">".toCharArray <~ ws) ~> takeWhile(_ != '<') <~ (ws ~> "</namespace>".toCharArray <~ ws))) map {
-      case ((key, cs), ns) => Namespace(key, cs, ns.mkString)
-    }
+      def ws = skipws
 
-    def namespace2: Parser[Namespace] = ((ws ~> "<namespace".toCharArray <~ ws) ~>
-      ((ws ~> "key=".toCharArray <~ ws) ~> stringLit) ~ ((ws ~> "case=".toCharArray <~ ws) ~> stringLit)
-    <~ (ws ~> "/>".toCharArray <~ ws)) map {
-      case (key, cs) => Namespace(key, cs, "")
-    }
+      def digit2Int: Parser[Int] =
+        acceptIf(c => c >= '0' && c <= '9') map { c => (c - '0').toInt }
 
-    def namespace = namespace1 | namespace2
+      def numAsInt: Parser[Int] =
+        digit2Int.foldLeft[Int](0, (acc, d) => acc * 10 + d)
 
-    def namespaces: Parser[List[Namespace]] =
-      (ws ~> "<namespaces>".toCharArray <~ ws) ~> rep(namespace) <~ (ws ~> "</namespaces>".toCharArray <~ ws)
+      def title: Parser[String] = ((ws ~> titleOpen <~ws) ~>
+        takeWhile(_ != '<')
+      <~ (ws ~> titleClose <~ ws)) map (_.mkString)
 
-    def siteinfo: Parser[SiteInfo] = ((ws ~> "<siteinfo>".toCharArray <~ ws) ~>
-      sitename ~ dbname ~ base ~ generator ~ cs ~ namespaces
-    <~ (ws ~> "</siteinfo>".toCharArray <~ ws)) map { case (((((stn, dbn) ,bs), gen), cs), nss) =>
-        SiteInfo(stn, dbn, bs, gen, cs, nss)
-    }
+      def ns: Parser[Int] = (ws ~> litRec(nsOpen) ~> ws) ~> numAsInt <~ (ws ~> litRec(nsClose) ~> ws)
+      def id: Parser[Int] = (ws ~> litRec(idOpen) ~> ws) ~> numAsInt <~ (ws ~> litRec(idClose) ~> ws)
+      def restrictions: Parser[String] = ((ws ~> litRec(restrictionsOpen) ~> ws) ~>
+        takeWhile(_ != '<')
+      <~ (ws ~> litRec(restrictionsClose) ~> ws)) map (_.toString)
 
-    def mediawikiOpen: Parser[Unit] = ((ws ~> "<mediawiki".toCharArray <~ ws) ~>
-      (ws ~> "xmlns=".toCharArray <~ ws) ~> (ws ~> stringLit <~ ws) ~>
-      (ws ~> "xmlns:xsi=".toCharArray <~ ws) ~> (ws ~> stringLit <~ ws) ~>
-      (ws ~> "xsi:schemaLocation=".toCharArray <~ ws) ~> (ws ~> stringLit <~ ws) ~>
-      (ws ~> "version=".toCharArray <~ ws) ~> (ws ~> stringLit <~ ws) ~>
-      (ws ~> "xml:lang=".toCharArray <~ ws) ~> (ws ~> stringLit <~ ws)
-    ~> (ws ~> ">".toCharArray <~ ws)) map { _ => () }
+      def redirect: Parser[String] = ((ws ~> litRec(redirectOpen) ~> ws) ~>
+        (ws ~> litRec(titleEq) <~ ws) ~> stringLit
+      <~ (ws ~> singleClose <~ ws)) map (_.toString)
 
-    def fullParser: Parser[(SiteInfo, List[Page])] = (mediawikiOpen ~>
-      siteinfo ~ rep(page)
-    <~ (ws ~> "</mediawiki>".toCharArray <~ ws))
+      def parentid: Parser[Int] =
+        (ws ~> parentIdOpen <~ ws) ~> numAsInt <~ (ws ~> parentIdClose <~ ws)
 
-    /**
-     * Only keep relevant info as per the wiki example on databricks
-     *
-     *  return new WikipediaPage(
-     *    (elem \ "title").text,
-     *    (elem \ "redirect" \ "@title").text,
-     *    (elem \ "revision" \ "timestamp").text,
-     *    (elem \ "revision" \ "contributor" \ "username").text,
-     *    (elem \ "revision" \ "text").text.replaceAll("\n", " ")  // Hive doesn't like \n in column strings.
-     *  )
-     */
-    def relevantInfos: Parser[List[RelevantInfo]] = fullParser map {
-      case (_, pages) => pages map { page =>
-        RelevantInfo(
-          page.title,
-          page.redirect,
-          page.rev.timestamp,
-          page.rev.contributor.name,
-          page.rev.text
-        )
+      /**
+       * datetime parser
+       * for now we assume all is given in UTC. We should extend
+       * with extra stuff if needed.
+       * @see http://www.w3schools.com/xml/schema_dtypes_date.asp
+       * for details
+       */
+      def year: Parser[Int] = rep(digit2Int, 4, 4) map {
+        ls => ls.foldLeft[Int](0)((acc, d) => acc * 10 + d)
+      }
+
+      def nn: Parser[Int] = rep(digit2Int, 2, 2) map {
+        ls => ls.foldLeft[Int](0)((acc, d) => acc * 10 + d)
+      }
+
+      /**
+       * seems to be some bug in the unapply of ~, @TODO investigate
+       */
+      def timestamp: Parser[TimeStamp] = ((ws ~> timestampOpen <~ ws) ~>
+          year ~ ('-' ~> nn) ~ ('-' ~> nn) ~
+          ('T' ~> nn) ~ (':' ~> nn) ~ (':' ~> nn) <~ 'Z'
+        <~ (ws ~> timestampClose <~ ws)) map { case (((((yr, mnth), day), hh), mm), ss) =>
+        TimeStamp(yr, mnth, day, hh, mm, ss)
+      }
+
+      def username: Parser[String] = ((ws ~> usernameOpen <~ ws) ~>
+        takeWhile(_ != '<') <~ (ws ~> usernameClose <~ ws)
+      ) map (_.mkString)
+
+      def contributor: Parser[Contributor] = (
+        (ws ~> contributorOpen <~ ws) ~> username ~ id <~ (ws ~> contributorClose <~ ws)
+      ) map { (Contributor.apply _).tupled }
+
+      def minor: Parser[Boolean] =  opt((ws ~> minorArr <~ ws)) map { _.isDefined }
+
+      def comment: Parser[String] = ((ws ~> commentOpen <~ ws) ~>
+        takeWhile(_ != '<')
+      <~ (ws ~> commentClose <~ ws)) map (_.mkString)
+
+      def model: Parser[String] = ((ws ~> modelOpen <~ ws) ~>
+        takeWhile(_ != '<')
+      <~ (ws ~> modelClose <~ ws)) map (_.mkString)
+
+
+      def format: Parser[String] = ((ws ~> formatOpen <~ ws) ~>
+        takeWhile(_ != '<') <~ (ws ~> formatClose <~ ws)
+      ) map (_.mkString)
+
+      /**
+       * @TODO we could explore the xml:space tag more if
+       * required. Check the specification.
+       */
+      def text: Parser[String] = ((ws ~> textOpen <~ ws) ~>
+        takeWhile(_ != '<')
+      <~ (ws ~> textClose <~ ws)) map (_.mkString)
+
+      /**
+       * @TODO seems that the sha1 in this doc is represented in base 36,
+       * didn't find enough info atm regarding this. So leaving it as a
+       * Parser[String]
+       */
+      def sha1: Parser[String] = ((ws ~> shaOpen <~ ws) ~>
+        takeWhile(_ != '<') <~ (ws ~> shaClose <~ ws)
+      ) map (_.mkString)
+
+      def revision: Parser[Revision] = ((ws ~> revisionOpen <~ ws) ~>
+        id ~ parentid ~ timestamp ~
+        contributor ~ minor ~ opt(comment) ~ model ~ format ~
+        text ~ sha1
+      <~ (ws ~> revisionClose <~ ws)) map {
+        case (((((((((id, pid), ts), cntr), mnr), cmt), mdl), fmt), txt), sha) =>
+          Revision(id, pid, ts, cntr, mnr, cmt, mdl, fmt, txt, sha)
+      }
+
+      /**
+       * And finally, the page
+       */
+      def page = ((ws ~> pageOpen <~ ws) ~>
+        title ~ ns ~ id ~ opt(restrictions) ~ opt(redirect) ~ revision
+      <~ (ws ~> pageClose <~ ws)) map {
+        case (((((t, ns), id), _), red), rev) => Page(t, ns, id, red, rev)
+      }
+
+      def sitename: Parser[String] = ((ws ~> sitenameOpen <~ ws) ~>
+        takeWhile(_ != '<') <~ (ws ~> sitenameClose <~ ws)
+      ) map (_.mkString)
+
+      def dbname: Parser[String] = ((ws ~> dbnameOpen <~ ws) ~>
+        takeWhile(_ != '<')
+      <~ (ws ~> dbnameClose <~ ws)) map (_.mkString)
+
+
+      def base: Parser[String] = ((ws ~> baseOpen <~ ws) ~>
+        takeWhile(_ != '<')
+      <~ (ws ~> baseClose <~ ws)) map (_.mkString)
+
+      def generator: Parser[String] = ((ws ~> generatorOpen <~ ws) ~>
+        takeWhile(_ != '<')
+      <~ (ws ~> generatorClose <~ ws)) map (_.mkString)
+
+      def cs: Parser[String] = ((ws ~> caseOpen <~ ws) ~>
+        takeWhile(_ != '<')
+      <~ (ws ~> caseClose <~ ws)) map (_.mkString)
+
+      def namespace1: Parser[Namespace] = ((ws ~> namespaceOpen <~ ws) ~>
+        ((ws ~> keyEq <~ ws) ~> stringLit) ~ ((ws ~> caseEq <~ ws) ~> stringLit)
+      ~ ((ws ~> '>' <~ ws) ~> takeWhile(_ != '<') <~ (ws ~> namespaceClose <~ ws))) map {
+        case ((key, cs), ns) => Namespace(key.toString, cs.toString, ns.mkString)
+      }
+
+      def namespace2: Parser[Namespace] = ((ws ~> namespaceOpen <~ ws) ~>
+        ((ws ~> keyEq <~ ws) ~> stringLit) ~ ((ws ~> caseEq <~ ws) ~> stringLit)
+      <~ (ws ~> singleClose <~ ws)) map {
+        case (key, cs) => Namespace(key.toString, cs.toString, "")
+      }
+
+      def namespace = namespace1 | namespace2
+
+      def namespaces: Parser[List[Namespace]] =
+        (ws ~> namespacesOpen <~ ws) ~> rep(namespace) <~ (ws ~> namespacesClose <~ ws)
+
+      def siteinfo: Parser[SiteInfo] = ((ws ~> siteinfoOpen <~ ws) ~>
+        sitename ~ dbname ~ base ~ generator ~ cs ~ namespaces
+      <~ (ws ~> siteinfoClose <~ ws)) map { case (((((stn, dbn) ,bs), gen), cs), nss) =>
+          SiteInfo(stn, dbn, bs, gen, cs, nss)
+      }
+
+      def mediawikiOpen: Parser[Unit] = ((ws ~> mediawikiOpen <~ ws) ~>
+        (ws ~> xmlns <~ ws) ~> (ws ~> stringLit <~ ws) ~>
+        (ws ~> xmlnsxsi <~ ws) ~> (ws ~> stringLit <~ ws) ~>
+        (ws ~> schemaLocation <~ ws) ~> (ws ~> stringLit <~ ws) ~>
+        (ws ~> version <~ ws) ~> (ws ~> stringLit <~ ws) ~>
+        (ws ~> lang <~ ws) ~> (ws ~> stringLit <~ ws)
+      ~> (ws ~> '>' <~ ws)) map { _ => () }
+
+      def fullParser: Parser[(SiteInfo, List[Page])] = (mediawikiOpen ~>
+        siteinfo ~ rep(page)
+      <~ (ws ~> mediawikiClose <~ ws))
+
+      /**
+       * Only keep relevant info as per the wiki example on databricks
+       *
+       *  return new WikipediaPage(
+       *    (elem \ "title").text,
+       *    (elem \ "redirect" \ "@title").text,
+       *    (elem \ "revision" \ "timestamp").text,
+       *    (elem \ "revision" \ "contributor" \ "username").text,
+       *    (elem \ "revision" \ "text").text.replaceAll("\n", " ")  // Hive doesn't like \n in column strings.
+       *  )
+       */
+      def relevantInfos: Parser[List[RelevantInfo]] = fullParser map {
+        case (_, pages) => pages map { page =>
+          RelevantInfo(
+            page.title,
+            page.redirect,
+            page.rev.timestamp,
+            page.rev.contributor.name,
+            page.rev.text
+          )
+        }
       }
     }
   }
+/*
+  object RelevantWikiParser {
+    lazy val parser = FastParsersCharArray {
 
-  val relevantWikiParser = FastParsersCharArray {
+      def digit2Int: Parser[Int] =
+        acceptIf(c => c >= '0' && c <= '9') map { c => (c - '0').toInt }
 
-    def digit2Int: Parser[Int] =
-      acceptIf(c => c >= '0' && c <= '9') map { c => (c - '0').toInt }
+      def ws = whitespaces
 
-    def ws = whitespaces
-    def wsWrap(p: Parser[Array[Char]]): Parser[Array[Char]] =  ws ~> p <~ ws
+      def title: Parser[String] = ((ws ~> titleOpen <~ ws) ~>
+        takeWhile(_ != '<')
+      <~ (ws ~> titleClose <~ ws)) map (_.mkString)
 
-    def title: Parser[String] = ((ws ~> "<title>".toCharArray <~ ws) ~>
-      takeWhile(_ != '<')
-    <~ (ws ~> "</title>".toCharArray <~ ws)) map (_.mkString)
+      def redirect: Parser[String] = ((ws ~> redirectOpen <~ ws) ~>
+        (ws ~> titleEq <~ ws) ~> stringLit
+      <~ (ws ~> singleClose <~ ws))
 
-    def redirect: Parser[InputWindow[Array[Char]]] = ((ws ~> "<redirect".toCharArray <~ ws) ~>
-      (ws ~> "title=".toCharArray <~ ws) ~> stringLit
-    <~ (ws ~> "/>".toCharArray <~ ws))
+      def minor: Parser[Boolean] =  opt((ws ~> minorArr <~ ws)) map { _.isDefined }
 
-    def minor: Parser[Boolean] =  opt((ws ~> "<minor />".toCharArray <~ ws)) map { _.isDefined }
+      def sitename2 = ((ws ~> sitenameOpen <~ ws) ~>
+        takeWhile2(_ != '<') <~ (ws ~> sitenameClose <~ ws)
+      )
 
-    def sitename2 = ((ws ~> "<sitename>".toCharArray <~ ws) ~>
-      takeWhile2(_ != '<') <~ (ws ~> "</sitename>".toCharArray <~ ws)
-    )
+      def dbname2 =
+        (ws ~> dbnameOpen <~ ws) ~> takeWhile2(_ != '<') ~> (ws ~> dbnameClose <~ ws)
 
-    def dbname2 =
-      (ws ~> "<dbname>".toCharArray <~ ws) ~> takeWhile2(_ != '<') ~> (ws ~> "</dbname>".toCharArray <~ ws)
+      def base2 =
+        (ws ~> baseOpen <~ ws) ~> takeWhile2(_ != '<') ~> (ws ~> baseClose <~ ws)
 
-    def base2 =
-      (ws ~> "<base>".toCharArray <~ ws) ~> takeWhile2(_ != '<') ~> (ws ~> "</base>".toCharArray <~ ws)
+      def generator2 =
+        (ws ~> generatorOpen <~ ws) ~> takeWhile2(_ != '<') ~> (ws ~> generatorClose <~ ws)
 
-    def generator2 =
-      (ws ~> "<generator>".toCharArray <~ ws) ~> takeWhile2(_ != '<') ~> (ws ~> "</generator>".toCharArray <~ ws)
+      def cs2 =
+        (ws ~> caseOpen <~ ws) ~> takeWhile2(_ != '<') ~> (ws ~> caseClose <~ ws)
 
-    def cs2 =
-      (ws ~> "<case>".toCharArray <~ ws) ~> takeWhile2(_ != '<') ~> (ws ~> "</case>".toCharArray <~ ws)
+      def namespace1B: Parser[Unit] = ((ws ~> namespaceOpen <~ ws) ~>
+        ((ws ~> keyEq <~ ws) ~> stringLit) ~> ((ws ~> caseEq <~ ws) ~> stringLit)
+      ~ ((ws ~> '>' <~ ws) ~> takeWhile2(_ != '<') ~> (ws ~> namespaceClose <~ ws))) map {
+        _ => ()
+      }
 
-    def namespace1B: Parser[Unit] = ((ws ~> "<namespace".toCharArray <~ ws) ~>
-      ((ws ~> "key=".toCharArray <~ ws) ~> stringLit) ~> ((ws ~> "case=".toCharArray <~ ws) ~> stringLit)
-    ~ ((ws ~> ">".toCharArray <~ ws) ~> takeWhile2(_ != '<') ~> (ws ~> "</namespace>".toCharArray <~ ws))) map {
-      _ => ()
+      def namespace2B: Parser[Unit] = ((ws ~> namespaceOpen <~ ws) ~>
+        ((ws ~> keyEq <~ ws) ~> stringLit) ~> ((ws ~> caseEq <~ ws) ~> stringLit)
+      <~ (ws ~> singleClose <~ ws)) map { _ => () }
+
+      def namespaceB = namespace1B | namespace2B
+
+      def namespaces2 = ((ws ~> namespacesOpen <~ ws) ~>
+        namespaceB.foldLeft[Unit]((), (_, elem) => ())
+      <~ (ws ~> namespacesClose <~ ws))
+
+      def siteinfo2: Parser[Unit] = ((ws ~> siteinfoOpen <~ ws) ~>
+        sitename2 ~> dbname2 ~> base2 ~> generator2 ~> cs2 ~> namespaces2
+      <~ (ws ~> siteinfoClose <~ ws))
+
+      /**
+       * Only keep relevant info as per the wiki example on databricks
+       *
+       *  return new WikipediaPage(
+       *    (elem \ "title").text,
+       *    (elem \ "redirect" \ "@title").text,
+       *    (elem \ "revision" \ "timestamp").text,
+       *    (elem \ "revision" \ "contributor" \ "username").text,
+       *    (elem \ "revision" \ "text").text.replaceAll("\n", " ")  // Hive doesn't like \n in column strings.
+       *  )
+       */
+
+      def numAsInt2: Parser[Unit] = digit2Int.foldLeft[Unit]((), (_, d) => ())
+
+      def ns2: Parser[Unit] = (ws ~> nsOpen <~ ws) ~> numAsInt2 <~ (ws ~> nsClose <~ ws)
+      def id2: Parser[Unit] = (ws ~> idOpen <~ ws) ~> numAsInt2 <~ (ws ~> idClose <~ ws)
+      def restrictions2 =
+        (ws ~> restrictionsOpen <~ ws) ~> takeWhile2(_ != '<') ~> (ws ~> restrictionsClose <~ ws)
+
+      def parentid2: Parser[Unit] =
+        (ws ~> parentIdOpen <~ ws) ~> numAsInt2 <~ (ws ~> parentIdClose <~ ws)
+
+      def contributor2: Parser[String] = (
+        (ws ~> contributorOpen <~ ws) ~> username <~ id2 <~ (ws ~> contributorClose <~ ws)
+      ) map (_.mkString)
+
+      def comment2 =
+        (ws ~> commentOpen <~ ws) ~> takeWhile2(_ != '<') ~> (ws ~> commentClose <~ ws)
+
+      def model2 =
+        (ws ~> modelOpen <~ ws) ~> takeWhile2(_ != '<') ~> (ws ~> modelClose <~ ws)
+
+      def format2 =
+        (ws ~> formatOpen <~ ws) ~> takeWhile2(_ != '<') ~> (ws ~> formatClose <~ ws)
+
+      /**
+       * datetime parser
+       * for now we assume all is given in UTC. We should extend
+       * with extra stuff if needed.
+       * @see http://www.w3schools.com/xml/schema_dtypes_date.asp
+       * for details
+       */
+      def year: Parser[Int] = rep(digit2Int, 4, 4) map {
+        ls => ls.foldLeft[Int](0)((acc, d) => acc * 10 + d)
+      }
+
+      def nn: Parser[Int] = rep(digit2Int, 2, 2) map {
+        ls => ls.foldLeft[Int](0)((acc, d) => acc * 10 + d)
+      }
+
+      /**
+       * seems to be some bug in the unapply of ~, @TODO investigate
+       */
+      def timestamp: Parser[TimeStamp] = ((ws ~> timestampOpen <~ ws) ~>
+          year ~ ('-' ~> nn) ~ ('-' ~> nn) ~
+          ('T' ~> nn) ~ (':' ~> nn) ~ (':' ~> nn) <~ 'Z'
+      <~ (ws ~> timestampClose <~ ws)) map { case (((((yr, mnth), day), hh), mm), ss) =>
+        TimeStamp(yr, mnth, day, hh, mm, ss)
+      }
+
+      /**
+       * @TODO we could explore the xml:space tag more if
+       * required. Check the specification.
+       */
+      def text: Parser[String] = ((ws ~> textOpen <~ ws) ~>
+        takeWhile(_ != '<')
+      <~ (ws ~> textClose <~ ws)) map (_.mkString)
+
+      def username: Parser[String] = (
+        (ws ~> usernameOpen <~ ws) ~> takeWhile(_ != '<') <~ (ws ~> usernameClose <~ ws)
+      ) map (_.mkString)
+
+      /**
+       * @TODO seems that the sha1 in this doc is represented in base 36,
+       * didn't find enough info atm regarding this. So leaving it as a
+       * Parser[String]
+       */
+      def sha12 =
+        (ws ~> shaOpen <~ ws) ~> takeWhile2(_ != '<') <~ (ws ~> shaClose <~ ws)
+
+      def revision2: Parser[((TimeStamp, String), String)] = ((ws ~> revisionOpen <~ ws) ~>
+        (id2 ~> parentid2 ~> timestamp) ~
+        (contributor2 <~ minor <~ opt(comment2) <~ model2 <~ format2) ~
+        (text <~ sha12)
+      <~ (ws ~> revisionClose <~ ws))
+
+      def relevantInfo: Parser[RelevantInfo] = ((ws ~> pageOpen <~ ws) ~>
+        (title <~ ns2 <~ id2 <~ opt(restrictions2)) ~ opt(redirect) ~ revision2
+      <~ (ws ~> pageClose <~ ws)) map {
+        case ((t, red), ((ts, usr), txt)) => RelevantInfo(t, red, ts, usr, txt)
+      }
+
+      def mediawikiOpen: Parser[Unit] = ((ws ~> mediawikiOpen <~ ws) ~>
+        (ws ~> xmlns <~ ws) ~> (ws ~> stringLit <~ ws) ~>
+        (ws ~> xmlnsxsi <~ ws) ~> (ws ~> stringLit <~ ws) ~>
+        (ws ~> schemaLocation <~ ws) ~> (ws ~> stringLit <~ ws) ~>
+        (ws ~> version <~ ws) ~> (ws ~> stringLit <~ ws) ~>
+        (ws ~> lang <~ ws) ~> (ws ~> stringLit <~ ws)
+      ~> (ws ~> '>' <~ ws)) map { _ => () }
+
+      def relevantInfos2: Parser[List[RelevantInfo]] = (mediawikiOpen ~>
+        siteinfo2 ~> rep(relevantInfo)
+      <~ (ws ~> mediawikiClose <~ ws))
+
     }
-
-    def namespace2B: Parser[Unit] = ((ws ~> "<namespace".toCharArray <~ ws) ~>
-      ((ws ~> "key=".toCharArray <~ ws) ~> stringLit) ~> ((ws ~> "case=".toCharArray <~ ws) ~> stringLit)
-    <~ (ws ~> "/>".toCharArray <~ ws)) map { _ => () }
-
-    def namespaceB = namespace1B | namespace2B
-
-    def namespaces2 = ((ws ~> "<namespaces>".toCharArray <~ ws) ~>
-      namespaceB.foldLeft[Unit]((), (_, elem) => ())
-    <~ (ws ~> "</namespaces>".toCharArray <~ ws))
-
-    def siteinfo2: Parser[Unit] = ((ws ~> "<siteinfo>".toCharArray <~ ws) ~>
-      sitename2 ~> dbname2 ~> base2 ~> generator2 ~> cs2 ~> namespaces2
-    <~ (ws ~> "</siteinfo>".toCharArray <~ ws))
-
-    /**
-     * Only keep relevant info as per the wiki example on databricks
-     *
-     *  return new WikipediaPage(
-     *    (elem \ "title").text,
-     *    (elem \ "redirect" \ "@title").text,
-     *    (elem \ "revision" \ "timestamp").text,
-     *    (elem \ "revision" \ "contributor" \ "username").text,
-     *    (elem \ "revision" \ "text").text.replaceAll("\n", " ")  // Hive doesn't like \n in column strings.
-     *  )
-     */
-
-    def numAsInt2: Parser[Unit] = digit2Int.foldLeft[Unit]((), (_, d) => ())
-
-    def ns2: Parser[Unit] = (ws ~> "<ns>".toCharArray <~ ws) ~> numAsInt2 <~ (ws ~> "</ns>".toCharArray <~ ws)
-    def id2: Parser[Unit] = (ws ~> "<id>".toCharArray <~ ws) ~> numAsInt2 <~ (ws ~> "</id>".toCharArray <~ ws)
-    def restrictions2 =
-      (ws ~> "<restrictions>".toCharArray <~ ws) ~> takeWhile2(_ != '<') ~> (ws ~> "</restrictions>".toCharArray <~ ws)
-
-    def parentid2: Parser[Unit] =
-      (ws ~> "<parentid>".toCharArray <~ ws) ~> numAsInt2 <~ (ws ~> "</parentid>".toCharArray <~ ws)
-
-    def contributor2: Parser[String] = (
-      (ws ~> "<contributor>".toCharArray <~ ws) ~> username <~ id2 <~ (ws ~> "</contributor>".toCharArray <~ ws)
-    ) map (_.mkString)
-
-    def comment2 =
-      (ws ~> "<comment>".toCharArray <~ ws) ~> takeWhile2(_ != '<') ~> (ws ~> "</comment>".toCharArray <~ ws)
-
-    def model2 =
-      (ws ~> "<model>".toCharArray <~ ws) ~> takeWhile2(_ != '<') ~> (ws ~> "</model>".toCharArray <~ ws)
-
-    def format2 =
-      (ws ~> "<format>".toCharArray <~ ws) ~> takeWhile2(_ != '<') ~> (ws ~> "</format>".toCharArray <~ ws)
-
-    /**
-     * datetime parser
-     * for now we assume all is given in UTC. We should extend
-     * with extra stuff if needed.
-     * @see http://www.w3schools.com/xml/schema_dtypes_date.asp
-     * for details
-     */
-    def year: Parser[Int] = rep(digit2Int, 4, 4) map {
-      ls => ls.foldLeft[Int](0)((acc, d) => acc * 10 + d)
-    }
-
-    def nn: Parser[Int] = rep(digit2Int, 2, 2) map {
-      ls => ls.foldLeft[Int](0)((acc, d) => acc * 10 + d)
-    }
-
-    /**
-     * seems to be some bug in the unapply of ~, @TODO investigate
-     */
-    def timestamp: Parser[TimeStamp] = ((ws ~> "<timestamp>".toCharArray <~ ws) ~>
-        year ~ ('-' ~> nn) ~ ('-' ~> nn) ~
-        ('T' ~> nn) ~ (':' ~> nn) ~ (':' ~> nn) <~ 'Z'
-    <~ (ws ~> "</timestamp>".toCharArray <~ ws)) map { case (((((yr, mnth), day), hh), mm), ss) =>
-      TimeStamp(yr, mnth, day, hh, mm, ss)
-    }
-
-    /**
-     * @TODO we could explore the xml:space tag more if
-     * required. Check the specification.
-     */
-    def text: Parser[String] = (wsWrap("<text xml:space=\"preserve\">".toCharArray) ~>
-      takeWhile(_ != '<')
-    <~ (ws ~> "</text>".toCharArray <~ ws)) map (_.mkString)
-
-    def username: Parser[String] = (
-      (ws ~> "<username>".toCharArray <~ ws) ~> takeWhile(_ != '<') <~ (ws ~> "</username>".toCharArray <~ ws)
-    ) map (_.mkString)
-
-    /**
-     * @TODO seems that the sha1 in this doc is represented in base 36,
-     * didn't find enough info atm regarding this. So leaving it as a
-     * Parser[String]
-     */
-    def sha12 =
-      (ws ~> "<sha1>".toCharArray <~ ws) ~> takeWhile2(_ != '<') <~ (ws ~> "</sha1>".toCharArray <~ ws)
-
-    def revision2: Parser[((TimeStamp, String), String)] = ((ws ~> "<revision>".toCharArray <~ ws) ~>
-      (id2 ~> parentid2 ~> timestamp) ~
-      (contributor2 <~ minor <~ opt(comment2) <~ model2 <~ format2) ~
-      (text <~ sha12)
-    <~ (ws ~> "</revision>".toCharArray <~ ws))
-
-    def relevantInfo: Parser[RelevantInfo] = ((ws ~> "<page>".toCharArray <~ ws) ~>
-      (title <~ ns2 <~ id2 <~ opt(restrictions2)) ~ opt(redirect) ~ revision2
-    <~ (ws ~> "</page>".toCharArray <~ ws)) map {
-      case ((t, red), ((ts, usr), txt)) => RelevantInfo(t, red, ts, usr, txt)
-    }
-
-    def mediawikiOpen: Parser[Unit] = ((ws ~> "<mediawiki".toCharArray <~ ws) ~>
-      (ws ~> "xmlns=".toCharArray <~ ws) ~> (ws ~> stringLit <~ ws) ~>
-      (ws ~> "xmlns:xsi=".toCharArray <~ ws) ~> (ws ~> stringLit <~ ws) ~>
-      (ws ~> "xsi:schemaLocation=".toCharArray <~ ws) ~> (ws ~> stringLit <~ ws) ~>
-      (ws ~> "version=".toCharArray <~ ws) ~> (ws ~> stringLit <~ ws) ~>
-      (ws ~> "xml:lang=".toCharArray <~ ws) ~> (ws ~> stringLit <~ ws)
-    ~> (ws ~> ">".toCharArray <~ ws)) map { _ => () }
-
-    def relevantInfos2: Parser[List[RelevantInfo]] = (mediawikiOpen ~>
-      siteinfo2 ~> rep(relevantInfo)
-    <~ (ws ~> "</mediawiki>".toCharArray <~ ws))
-  }
+  }*/
 }

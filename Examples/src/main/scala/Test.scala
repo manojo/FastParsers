@@ -9,7 +9,7 @@
 //because warnings
 
 import fastparsers.framework.getAST
-import fastparsers.framework.implementations.FastPrinters
+import fastparsers.framework.implementations._
 import fastparsers.framework.parseresult._
 import fastparsers.input.InputWindow
 import fastparsers.parsers.Parser
@@ -119,7 +119,6 @@ object KVSchemaKnownRecognizeAuthorInfos {
    }
  }
 
-/*
 object Test {
   def isDigit(c: Char) = (c >= '0') && (c <= '9')
 
@@ -174,4 +173,3 @@ object Test {
 
  }
 }
-*/
