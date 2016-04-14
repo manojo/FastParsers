@@ -3,11 +3,11 @@ import Keys._
 
 object FastParsersBuild extends Build {
 	import PublishSettings._
-	scalaVersion := "2.11.7"
+	scalaVersion := "2.11.8"
 
   def commonSettings = Seq(
     version := "0.1-SNAPSHOT",
-	  scalaVersion := "2.11.7",
+	  scalaVersion := "2.11.8",
     //scalacOptions := Seq("-optimize"), // <-- slows down compilation drastically
 	  libraryDependencies ++=  Seq(
 		  "org.scala-lang" % "scala-compiler"  % scalaVersion.value % "provided",
